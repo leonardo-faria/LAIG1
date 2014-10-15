@@ -1,0 +1,124 @@
+<anf>
+    <globals>
+        <drawing mode="fill" shading="gourand" background="0.4 0.4 1.0 1.0" />
+        <culling face="both" order="ccw" />
+        <lighting doublesided="true" local="true" enabled="true" ambient="0.0 0.0 0.0 1.0" />
+    </globals>
+    
+    <cameras initial="cameras">
+        <perspective id="Survivor" near="0.1" far="70.0" angle="90.0" pos="17.0 3.0 17.5" target="22.0 0.0 46.0" />
+		<perspective id="Camera1" near="0.1" far="70.0" angle="120.0" pos="15.0 15.0 5.0" target="15.0 3.0 17.5" />
+		<perspective id="Camera2" near="0.1" far="70.0" angle="120.0" pos="13.0 15.0 45.0" target="15.0 3.0 17.5" />
+    </cameras>
+ 
+    <lights>
+            <light id="sun" type="omni" enabled="true" marker="true" pos="12.5 20.0 25.0" >
+               <component type="ambient" value="1.0 1.0 1.0 1.0" />
+               <component type="diffuse" value="1.0 1.0 1.0 1.0" />
+               <component type="specular" value="1.0 1.0 1.0 1.0" />
+
+            </light>
+
+            <light id="moon" type="omni" enabled="true" marker="true" pos="12.5 20.0 25.0" >
+               <component type="ambient" value="0.2 0.2 0.2 1.0" />
+               <component type="diffuse" value="0.2 0.2 0.2 1.0" />
+               <component type="specular" value="0.2 0.2 0.2 1.0" />
+            </light>
+    </lights>
+
+    <textures>       
+          <texture id="seaText" file="seaText.jpg" texlength_s="1.0" texlength_t="1.0" />
+		  <texture id="plankText" file="plankText.jpg" texlength_s="1.0" texlength_t="1.0" />
+		  <texture id="sailText" file="sailText.jpg" texlength_s="1.0" texlength_t="1.0" />
+		  <texture id="buoyText" file="buoyText.jpg" texlength_s="1.0" texlength_t="1.0" />
+		  <texture id="poleText" file="poleText.jpg" texlength_s="1.0" texlength_t="1.0" />
+    </textures>
+
+    <appearances>
+        <appearance id="sea" shininess="1.0" textureref="seaText" >
+               <component type="ambient" value="0.8 0.8 0.8 1.0" />
+               <component type="diffuse" value="0.8 0.8 0.8 1.0" />
+               <component type="specular" value="0.8 0.8 0.8 1.0" />
+        </appearance>
+		<appearance id="plank" shininess="1.0" textureref="plankText" >
+               <component type="ambient" value="0.6 0.6 0.6 1.0" />
+               <component type="diffuse" value="0.6 0.6 0.6 1.0" />
+               <component type="specular" value="0.6 0.6 0.6 1.0" />
+        </appearance>
+		<appearance id="sail" shininess="1.0" textureref="sailText" >
+               <component type="ambient" value="0.8 0.8 0.8 1.0" />
+               <component type="diffuse" value="0.8 0.8 0.8 1.0" />
+               <component type="specular" value="0.8 0.8 0.8 1.0" />
+        </appearance>
+		<appearance id="buoy" shininess="1.0" textureref="buoyText" >
+               <component type="ambient" value="1.0 1.0 1.0 1.0" />
+               <component type="diffuse" value="1.0 1.0 1.0 1.0" />
+               <component type="specular" value="1.0 1.0 1.0 1.0" />
+        </appearance>
+		<appearance id="pole" shininess="1.0" textureref="poleText" >
+               <component type="ambient" value="0.6 0.6 0.6 1.0" />
+               <component type="diffuse" value="0.6 0.6 0.6 1.0" />
+               <component type="specular" value="0.6 0.6 0.6 1.0" />
+        </appearance>
+    </appearances>
+
+    <graph rootid="shipwreck">
+
+        <node id="shipwreck">
+            <transforms>
+            </transforms>
+            <appearanceref id=""/>
+            <primitives>
+             </primitives>
+               
+            <descendants>
+                <noderef id="sea" />
+				<noderef id="pole"/>
+				<noderef id="buoy" />
+			</descendants>
+        </node>
+		
+		<node id="sea">
+            <transforms>
+				<transform type="translate" to="0.0 0 50 " />
+                <transform type="rotate" axis="x" angle="-90" />
+            </transforms>
+            <appearanceref id="sea" />
+            <primitives>
+				<rectangle xy1="0.0 0.0" xy2="100.0 50.0" />
+            </primitives>
+               
+            <descendants>
+			</descendants>
+        </node>
+		
+    
+	 <node id="pole">
+      <transforms>
+        <transform type="translate" to="5.0 0.0 0.0" />
+        <transform type="rotate" axis="x" angle="-90" />
+      </transforms>
+      <appearanceref id="pole" />
+      <primitives>
+        <cylinder base="0.3" top="0.3" height="10" slices="20" stacks="10" />
+      </primitives>
+	  <descendants>
+      </descendants>
+    </node>
+		
+	
+	
+	<node id="buoy">
+      <transforms><transform type="translate" to="22.0 0.2 46.0" />
+	   
+      </transforms>
+      <appearanceref id="buoy" />
+      <primitives>
+	  <torus inner="0.5" outer="2.5" slices="20" loops="25" />
+	  </primitives>
+	  <descendants>
+	  </descendants>
+	  </node>
+		
+    </graph>
+</anf>
