@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	try {
 		app.init(&argc, argv);
 
-		app.setScene(new AnfScene("shipwreck (3).anf"));
+		app.setScene(new AnfScene("LAIG_TP1_ANF_T01_G03_v2.anf"));
 		app.setInterface(new CGFinterface());
 
 		app.run();

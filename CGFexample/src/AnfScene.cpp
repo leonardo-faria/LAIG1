@@ -77,7 +77,6 @@ AnfScene::AnfScene(string filename) {
 		globals.lighting.enabled = enabled;
 		for (int i = 0; i < 4; ++i)
 			globals.lighting.ambient.push_back(ambient[i]);
-		//globals.lighting.doublesided = doublesided;
 	}
 
 	printf("Read globals\nStarting Cameras\n");
@@ -137,55 +136,67 @@ AnfScene::AnfScene(string filename) {
 	if (lightsElement == NULL)
 		printf("Lights block not found!\n");
 	else {
+		int idl[8];
+		idl[0] = GL_LIGHT0;
+		idl[1] = GL_LIGHT1;
+		idl[2] = GL_LIGHT2;
+		idl[3] = GL_LIGHT3;
+		idl[4] = GL_LIGHT4;
+		idl[5] = GL_LIGHT5;
+		idl[6] = GL_LIGHT6;
+		idl[7] = GL_LIGHT7;
+		int i = 0;
+
 		for (TiXmlElement* l = lightsElement->FirstChildElement("light"); l != NULL; l = l->NextSiblingElement("light")) {
-			char *id, *type;
-			bool enabled, marker;
-			float pos[3];
-			id = (char*) l->Attribute("id");
+
+			Light light;
+			char *type;
 			type = (char*) l->Attribute("type");
-			l->QueryBoolAttribute("enabled", &enabled);
-			l->QueryBoolAttribute("marker", &marker);
+			float pos[4];
 			sscanf(l->Attribute("pos"), "%f %f %f", &pos[0], &pos[1], &pos[2]);
+			pos[3] = 1;
+
 			if (strcmp(type, "spot") == 0) {
 				float target[3], angle, exponent;
-				sscanf(l->Attribute("target"), "%f %f %f", &target[0], &target[1], &target[2]);
 				l->QueryFloatAttribute("angle", &angle);
 				l->QueryFloatAttribute("exponent", &exponent);
-				Lights::Spot spot;
-				spot.type = type;
-				spot.enabled = enabled;
-				spot.marker = marker;
-				spot.angle = angle;
-				spot.exponent = exponent;
-				for (int i = 0; i < 3; ++i)
-					spot.pos.push_back(pos[i]);
-				for (int i = 0; i < 3; ++i)
-					spot.target.push_back(target[i]);
+				sscanf(l->Attribute("target"), "%f %f %f", &target[0], &target[1], &target[2]);
+				float unit = sqrt(target[0] * target[0] + target[1] * target[1] + target[2] * target[2]);
+				for (int i = 0; i < 3; i++) {
+					target[i] = target[i] / unit;
+				}
+				glLightf(idl[i], GL_SPOT_CUTOFF, angle);
+				glLightf(idl[i], GL_SPOT_EXPONENT, exponent);
+				glLightfv(idl[i], GL_SPOT_DIRECTION, target);
 
-			} else {
-				Lights::Omni omni;
-				omni.type = type;
-				omni.enabled = enabled;
-				omni.marker = marker;
-				for (int i = 0; i < 3; ++i)
-					omni.pos.push_back(pos[i]);
-				lights.light[id] = omni;
 			}
+			light.cgfl = new CGFlight(idl[i], pos);
+			++i;
+			bool enabled, marker;
+			l->QueryBoolAttribute("enabled", &enabled);
+			l->QueryBoolAttribute("marker", &marker);
+
 			for (TiXmlElement* c = l->FirstChildElement("component"); c != NULL; c = c->NextSiblingElement("component")) {
 				char* type = (char*) c->Attribute("type");
 				float value[4];
 				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0], &value[1], &value[2], &value[3]);
 				if (strcmp(type, "ambient") == 0) {
-					for (int i = 0; i < 4; ++i)
-						lights.light[id].ambient.push_back(value[i]);
+					light.cgfl->setAmbient(value);
 				} else if (strcmp(type, "diffuse") == 0) {
-					for (int i = 0; i < 4; ++i)
-						lights.light[id].diffuse.push_back(value[i]);
+					light.cgfl->setDiffuse(value);
 				} else if (strcmp(type, "specular") == 0) {
-					for (int i = 0; i < 4; ++i)
-						lights.light[id].specular.push_back(value[i]);
+					light.cgfl->setSpecular(value);
 				}
 			}
+
+			light.marker = marker;
+
+			if (strcmp(type, "spot") == 0)
+				light.cgfl->enable();
+			else
+				light.cgfl->enable();
+			light.cgfl->update();
+			lights.push_back(light);
 		}
 	}
 
@@ -194,7 +205,7 @@ AnfScene::AnfScene(string filename) {
 	if (textsElement == NULL)
 		printf("Textures block not found!\n");
 	else {
-		for (TiXmlElement* t = textsElement->FirstChildElement("texture"); t == NULL; t = t->NextSiblingElement("texture")) {
+		for (TiXmlElement* t = textsElement->FirstChildElement("texture"); t != NULL; t = t->NextSiblingElement("texture")) {
 			char *id, *file;
 			float textlength_s, textlength_t;
 			id = (char*) t->Attribute("id");
@@ -214,28 +225,35 @@ AnfScene::AnfScene(string filename) {
 	if (appearsElement == NULL)
 		printf("Appearences block not found!\n");
 	else {
-		for (TiXmlElement *a = appearsElement->FirstChildElement("appearance"); a == NULL; a = a->NextSiblingElement("appearance")) {
+		for (TiXmlElement *a = appearsElement->FirstChildElement("appearance"); a != NULL; a = a->NextSiblingElement("appearance")) {
 			char *id, *textureref;
 			float shininess;
 			a->QueryFloatAttribute("shininess", &shininess);
 			id = (char*) a->Attribute("id");
+
 			textureref = (char*) a->Attribute("textureref");
-			float *ambient, *diffuse, *specular;
+			float ambient[4], diffuse[4], specular[4];
 			for (TiXmlElement* c = a->FirstChildElement("component"); c != NULL; c = c->NextSiblingElement("component")) {
 				char* type = (char*) c->Attribute("type");
 				float value[4];
 				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0], &value[1], &value[2], &value[3]);
-				if (strcmp(type, "ambient") == 0)
-					ambient = value;
-				else if (strcmp(type, "diffuse") == 0)
-					diffuse = value;
+				if (strcmp(type, "ambient") == 0) {
+					for (int i = 0; i < 4; i++)
+						ambient[i] = value[i];
+				} else if (strcmp(type, "diffuse") == 0)
+					for (int i = 0; i < 4; i++)
+						diffuse[i] = value[i];
 				else if (strcmp(type, "specular") == 0)
-					specular = value;
+					for (int i = 0; i < 4; i++)
+						specular[i] = value[i];
 			}
-			CGFappearance ap(ambient, specular, diffuse, shininess);
+			CGFappearance *ap = new CGFappearance(ambient, specular, diffuse, shininess);
 			Appearence app;
 			app.appearence = ap;
-			app.textureref = textureref;
+			if (textureref != NULL) {
+				app.textureref = textureref;
+				ap->setTexture(textures.texture[textureref].file);
+			}
 			appearances[id] = app;
 		}
 	}
@@ -252,9 +270,7 @@ AnfScene::AnfScene(string filename) {
 
 			Graph::Node node;
 			char* id = (char*) n->Attribute("id");
-
 			glLoadIdentity();
-			//TODO transformaçoes
 			TiXmlElement* transformElement = n->FirstChildElement("transforms");
 			for (TiXmlElement* t = transformElement->FirstChildElement("transform"); t != NULL; t = t->NextSiblingElement("transform")) {
 
@@ -278,7 +294,6 @@ AnfScene::AnfScene(string filename) {
 				}
 			}
 			glGetFloatv(GL_MODELVIEW_MATRIX, node.matrix);
-
 			TiXmlElement* apElement = n->FirstChildElement("appearanceref");
 			char* appearancerefId = (char*) apElement->Attribute("id");
 			node.appearencerefID = appearancerefId;
@@ -354,21 +369,25 @@ AnfScene::AnfScene(string filename) {
 				}
 			}
 			TiXmlElement* descendantsElement = n->FirstChildElement("descendants");
-			for (TiXmlElement* d = descendantsElement->FirstChildElement("noderef"); d != NULL; d = d->NextSiblingElement("noderef")) {
-				char* idref = (char*) d->Attribute("id");
-				Graph::Node* p;
-				p = &graph.nodes[idref];
-				node.descendant.push_back(p);
+
+			if (descendantsElement != NULL) {
+				for (TiXmlElement* d = descendantsElement->FirstChildElement("noderef"); d != NULL; d = d->NextSiblingElement("noderef")) {
+					char* idref = (char*) d->Attribute("id");
+					Graph::Node* p;
+					p = &graph.nodes[idref];
+					node.descendant.push_back(p);
+				}
 			}
 			node.appearencerefID = appearancerefId;
 			graph.nodes[id] = node;
+
 		}
 	}
 	printf("Read graph\nRead complete!\n");
 }
 
 void AnfScene::init() {
-//	Declares and enables a light
+	//	Declares and enables a light
 	if (globals.culling.face == "none")
 		glCullFace(GL_NONE);
 	else if (globals.culling.face == "back")
@@ -387,10 +406,10 @@ void AnfScene::init() {
 	glEnable(GL_NORMALIZE);
 
 	if (globals.lighting.doublesided)
-		glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+		glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
 	if (globals.lighting.local)
-		glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE);
+		glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 	// Defines a default normal
 
 	float ambientLight[4] = { 0, 0, 0, 0 };
@@ -411,38 +430,103 @@ void AnfScene::init() {
 	else if (globals.drawing.mode == "point")
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
+	glClearColor(globals.drawing.background[0], globals.drawing.background[1], globals.drawing.background[2], globals.drawing.background[3]);
 	glNormal3f(0, 0, 1);
 
-	float light0_pos[4] = { 4.0, 6.0, 5.0, 1.0 };
-	light0 = new CGFlight(GL_LIGHT0, light0_pos);
-	light0->enable();
 	setUpdatePeriod(30);
 }
 
 void drawRectangle(float x1, float y1, float x2, float y2) {
-	glRectf(x1, y1, x2, y2);
+	glBegin(GL_POLYGON);
+	glTexCoord2f(0, 0);
+	glVertex2f(x1, y1);
+	glTexCoord2f(1, 0);
+	glVertex2f(x2, y1);
+	glTexCoord2f(1, 1);
+	glVertex2f(x2, y2);
+	glTexCoord2f(0, 1);
+	glVertex2f(x1, y2);
+	glEnd();
 }
 void drawTriangle(vector<float> v1, vector<float> v2, vector<float> v3) {
 	glBegin(GL_TRIANGLES);
+	glTexCoord2f(0, 0);
 	glVertex3f(v1[0], v1[1], v1[2]);
+	glTexCoord2f(1, 0);
 	glVertex3f(v2[0], v2[1], v3[2]);
+	glTexCoord2f(0.5, 1);
 	glVertex3f(v3[0], v3[1], v3[2]);
 	glEnd();
 }
 void drawCylinder(float base, float top, float height, int slices, int stacks) {
-	gluCylinder(gluNewQuadric(), base, top, height, slices, stacks);
+	glPushMatrix();
+	glRotatef(180, 1, 0, 0);
+	GLUquadric *botD = gluNewQuadric();
+	gluQuadricTexture(botD, GL_TRUE);
+	gluDisk(botD, 0, base, slices, 1);
+	glPopMatrix();
+	glPushMatrix();
+	glTranslatef(0, 0, height);
+	GLUquadric *topD = gluNewQuadric();
+	gluQuadricTexture(topD, GL_TRUE);
+	gluDisk(topD, 0, top, slices, 1);
+	glPopMatrix();
+	GLUquadric *cyl = gluNewQuadric();
+	gluQuadricTexture(cyl, GL_TRUE);
+	gluCylinder(cyl, base, top, height, slices, stacks);
+
 }
 void drawSphere(float radius, int slices, int stacks) {
-	gluSphere(gluNewQuadric(), radius, slices, stacks);
+	GLUquadric *sphere = gluNewQuadric();
+	gluQuadricTexture(sphere, GL_TRUE);
+	gluSphere(sphere, radius, slices, stacks);
 }
 void drawTorus(float inner, float outer, int slices, int rings) {
-	glutSolidTorus(inner, outer, slices, rings);
+
+	int i, j;
+	GLfloat theta, phi, theta1;
+	GLfloat cosTheta, sinTheta;
+	GLfloat cosTheta1, sinTheta1;
+	GLfloat ringDelta, sideDelta;
+
+	ringDelta = 2.0 * M_PI / rings;
+	sideDelta = 2.0 * M_PI / slices;
+
+	theta = 0.0;
+	cosTheta = 1.0;
+	sinTheta = 0.0;
+	for (i = rings - 1; i >= 0; i--) {
+		theta1 = theta + ringDelta;
+		cosTheta1 = cos(theta1);
+		sinTheta1 = sin(theta1);
+		glBegin(GL_QUAD_STRIP);
+		phi = 0.0;
+		for (j = slices; j >= 0; j--) {
+			GLfloat cosPhi, sinPhi, dist;
+
+			phi += sideDelta;
+			cosPhi = cos(phi);
+			sinPhi = sin(phi);
+			dist = outer + inner * cosPhi;
+
+			glNormal3f(cosTheta1 * cosPhi, -sinTheta1 * cosPhi, sinPhi);
+			glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, inner * sinPhi);
+			glNormal3f(cosTheta * cosPhi, -sinTheta * cosPhi, sinPhi);
+			glVertex3f(cosTheta * dist, -sinTheta * dist, inner * sinPhi);
+		}
+		glEnd();
+		theta = theta1;
+		cosTheta = cosTheta1;
+		sinTheta = sinTheta1;
+	}
+
 }
 
 void AnfScene::drawNode(Graph::Node* n) {
 	glPushMatrix();
-	if(n->appearencerefID!="inherit")
-		appearances[n->appearencerefID].appearence.apply();
+
+	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0)
+		appearances[n->appearencerefID].appearence->apply();
 	glMultMatrixf(n->matrix);
 	for (unsigned int i = 0; i < n->rectangle.size(); ++i) {
 		drawRectangle(n->rectangle[i].xy1[0], n->rectangle[i].xy1[1], n->rectangle[i].xy2[0], n->rectangle[i].xy2[1]);
@@ -471,10 +555,15 @@ void AnfScene::display() {
 	glLoadIdentity();
 
 	CGFscene::activeCamera->applyView();
-	axis.draw();
-	light0->draw();
 
+	for (int i = 0; i < lights.size(); ++i) {
+		lights[i].cgfl->update();
+		if (lights[i].marker)
+			lights[i].cgfl->draw();
+	}
+	axis.draw();
 	drawNode(&graph.nodes[graph.rootid]);
+
 	glutSwapBuffers();
 }
 

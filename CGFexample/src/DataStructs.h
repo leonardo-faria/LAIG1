@@ -47,23 +47,10 @@ public:
 	map<string, Camera> camera;
 };
 
-class Lights {
+class Light {
 public:
-	class Light {
-	public:
-		string type;
-		bool enabled, marker;
-		vector<float> pos, ambient, diffuse, specular;
-	};
-	class Omni: public Light {
-
-	};
-	class Spot: public Light {
-	public:
-		vector<float> pos, target;
-		float angle, exponent;
-	};
-	map<string, Light> light;
+	bool marker;
+	CGFlight* cgfl;
 };
 
 class Textures {
@@ -78,7 +65,7 @@ public:
 
 class Appearence {
 public:
-	CGFappearance appearence;
+	CGFappearance* appearence;
 	string textureref;
 };
 

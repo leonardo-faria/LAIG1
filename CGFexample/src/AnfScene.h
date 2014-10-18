@@ -15,14 +15,11 @@ public:
 
 	Globals globals;
 	Cameras cameras;
-	Lights lights;
 	Textures textures;
 	Graph graph;
 
 	map<string, Appearence> appearances;
-
-	map<string, CGFlight> light;
-	CGFlight* light0;
+	vector<Light> lights;
 	~AnfScene();
 };
 
