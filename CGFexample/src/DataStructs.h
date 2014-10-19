@@ -6,7 +6,7 @@ class Globals {
 public:
 	class Drawing {
 	public:
-		string mode;
+		int mode;
 		string shadding;
 		vector<float> background;
 	};
@@ -22,35 +22,27 @@ public:
 		bool doublesided, local, enabled;
 		vector<float> ambient;
 	};
-
+	Globals() {
+		drawing.mode = 0;
+		drawing.shadding = "gourand";
+		for (int i = 0; i < 4; ++i)
+			drawing.background.push_back(0);
+		culling.face = "back";
+		culling.order = "ccw";
+		for (int i = 0; i < 4; ++i)
+			lighting.ambient.push_back(0);
+		lighting.doublesided=false;
+		lighting.enabled=true;
+		lighting.local=true;
+	}
 	Drawing drawing;
 	Culling culling;
 	Lighting lighting;
 };
 
-//class Cameras {
-//public:
-//	class Camera {
-//		;
-//	};
-//	class Perspective: public Camera {
-//	public:
-//		float near, far, angle;
-//		vector<float> pos, target;
-//
-//	};
-//	class Ortho: public Camera {
-//	public:
-//		char direction;
-//		float near, far, left, right, top, bottom;
-//	};
-//	string initial;
-//	map<string, Camera> camera;
-//};
-
 class Light {
 public:
-	bool marker;
+	bool marker, enabled;
 	CGFlight* cgfl;
 };
 
@@ -58,6 +50,9 @@ class Textures {
 public:
 	class Texture {
 	public:
+		Texture() {
+			file = "";
+		}
 		string file;
 		float texlength_s, texlength_t;
 	};
@@ -123,11 +118,13 @@ class CPerspective: public Camera {
 public:
 	float near, far, angle, pos[3], target[3];
 	void apply() {
-		float ratio = ((float) CGFapplication::width) / ((float) CGFapplication::height);
+		float ratio = ((float) CGFapplication::width)
+				/ ((float) CGFapplication::height);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(angle, ratio, near, far);
-		gluLookAt(pos[0], pos[1], pos[2], target[0], target[1], target[2], 0, 1, 0);
+		gluLookAt(pos[0], pos[1], pos[2], target[0], target[1], target[2], 0, 1,
+				0);
 	}
 };
 class COrtho: public Camera {
@@ -135,7 +132,8 @@ public:
 	string direction;
 	float near, far, left, right, top, bottom;
 	void apply() {
-		float ratio = ((float) CGFapplication::width) / ((float) CGFapplication::height);
+		float ratio = ((float) CGFapplication::width)
+				/ ((float) CGFapplication::height);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(left * ratio, right * ratio, bottom, top, near, far);

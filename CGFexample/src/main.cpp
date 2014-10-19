@@ -6,6 +6,7 @@
 #include <iostream>
 #include <exception>
 
+#include "Interface.h"
 #include "CGFapplication.h"
 
 #include "AnfScene.h"
@@ -13,24 +14,20 @@
 using std::cout;
 using std::exception;
 
-
 int main(int argc, char* argv[]) {
 
 	CGFapplication app = CGFapplication();
 
 	try {
 		app.init(&argc, argv);
-
-		app.setScene(new AnfScene("LAIG_TP1_ANF_T01_G03_v2.anf"));
-		app.setInterface(new CGFinterface());
+		app.setScene(new AnfScene("shipwreck.anf"));
+		app.setInterface(new Interface());
 
 		app.run();
-	}
-	catch(GLexception& ex) {
+	} catch (GLexception& ex) {
 		cout << "Error: " << ex.what();
 		return -1;
-	}
-	catch(exception& ex) {
+	} catch (exception& ex) {
 		cout << "Unexpected error: " << ex.what();
 		return -1;
 	}

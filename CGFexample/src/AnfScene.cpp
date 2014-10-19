@@ -21,7 +21,8 @@ AnfScene::AnfScene(string filename) {
 	TiXmlDocument *doc = new TiXmlDocument(filename.c_str());
 
 	if (!doc->LoadFile()) {
-		printf("Could not load file '%s'. Error='%s'. Exiting.\n", filename.c_str(), doc->ErrorDesc());
+		printf("Could not load file '%s'. Error='%s'. Exiting.\n",
+				filename.c_str(), doc->ErrorDesc());
 		exit(1);
 	}
 
@@ -43,19 +44,28 @@ AnfScene::AnfScene(string filename) {
 	if (globalsElement == NULL)
 		printf("Globals block not found!\n");
 	else {
-		TiXmlElement* drawingElement = globalsElement->FirstChildElement("drawing");
-		char *mode, *shading;
+		TiXmlElement* drawingElement = globalsElement->FirstChildElement(
+				"drawing");
+		char *shading;
+		string mode;
 		float background[4];
 		mode = (char*) drawingElement->Attribute("mode");
 		shading = (char*) drawingElement->Attribute("shading");
-		sscanf((char*) drawingElement->Attribute("background"), "%f %f %f %f", &background[0], &background[1], &background[2], &background[3]);
+		sscanf((char*) drawingElement->Attribute("background"), "%f %f %f %f",
+				&background[0], &background[1], &background[2], &background[3]);
 
-		globals.drawing.mode = mode;
+		if (mode == "fill")
+			globals.drawing.mode = 0;
+		else if (mode == "line")
+			globals.drawing.mode = 1;
+		else
+			globals.drawing.mode = 2;
 		globals.drawing.shadding = shading;
 		for (int i = 0; i < 4; ++i)
 			globals.drawing.background.push_back(background[i]);
 
-		TiXmlElement* cullingElement = globalsElement->FirstChildElement("culling");
+		TiXmlElement* cullingElement = globalsElement->FirstChildElement(
+				"culling");
 		char *face, *order;
 		face = (char*) cullingElement->Attribute("face");
 		order = (char*) cullingElement->Attribute("order");
@@ -63,7 +73,8 @@ AnfScene::AnfScene(string filename) {
 		globals.culling.face = face;
 		globals.culling.order = order;
 
-		TiXmlElement* lightingElement = globalsElement->FirstChildElement("lighting");
+		TiXmlElement* lightingElement = globalsElement->FirstChildElement(
+				"lighting");
 		bool doublesided, local, enabled;
 		char *sambient;
 		float ambient[4];
@@ -71,7 +82,8 @@ AnfScene::AnfScene(string filename) {
 		lightingElement->QueryBoolAttribute("local", &local);
 		lightingElement->QueryBoolAttribute("enabled", &enabled);
 		sambient = (char*) lightingElement->Attribute("ambient");
-		sscanf(sambient, "%f %f %f %f", &ambient[0], &ambient[1], &ambient[2], &ambient[3]);
+		sscanf(sambient, "%f %f %f %f", &ambient[0], &ambient[1], &ambient[2],
+				&ambient[3]);
 		globals.lighting.doublesided = doublesided;
 		globals.lighting.local = local;
 		globals.lighting.enabled = enabled;
@@ -84,12 +96,12 @@ AnfScene::AnfScene(string filename) {
 	if (camerasElement == NULL)
 		printf("Cameras block not found!\n");
 	else {
-		char* initial;
+		string initial;
 		initial = (char*) camerasElement->Attribute("initial");
 
-		this->initial = initial;
-		for (TiXmlElement* p = camerasElement->FirstChildElement("perspective"); p != NULL; p = p->NextSiblingElement("perspective")) {
-			char* id;
+		for (TiXmlElement* p = camerasElement->FirstChildElement("perspective");
+				p != NULL; p = p->NextSiblingElement("perspective")) {
+			string id;
 			float near, far, angle;
 			float pos[3], target[3];
 			id = (char*) p->Attribute("id");
@@ -97,7 +109,8 @@ AnfScene::AnfScene(string filename) {
 			p->QueryFloatAttribute("far", &far);
 			p->QueryFloatAttribute("angle", &angle);
 			sscanf(p->Attribute("pos"), "%f %f %f", &pos[0], &pos[1], &pos[2]);
-			sscanf(p->Attribute("target"), "%f %f %f", &target[0], &target[1], &target[2]);
+			sscanf(p->Attribute("target"), "%f %f %f", &target[0], &target[1],
+					&target[2]);
 
 			CPerspective* cp = new CPerspective();
 
@@ -113,19 +126,16 @@ AnfScene::AnfScene(string filename) {
 			cp->target[1] = target[1];
 			cp->target[2] = target[2];
 
-			//			Cameras::Perspective perspective;
-			//			perspective.angle = angle;
-			//			perspective.near = near;
-			//			perspective.far = far;
-			//			for (int i = 0; i < 3; ++i)
-			//				perspective.pos.push_back(pos[i]);
-			//			for (int i = 0; i < 3; ++i)
-			//				perspective.target.push_back(target[i]);
 			cameras[id] = cp;
+			camera_id.push_back(id);
 
+			if (id == initial)
+				this->initial = camera_id.size() - 1;
 		}
-		for (TiXmlElement* o = camerasElement->FirstChildElement("ortho"); o != NULL; o = o->NextSiblingElement("ortho")) {
-			char *id, *direction;
+		for (TiXmlElement* o = camerasElement->FirstChildElement("ortho");
+				o != NULL; o = o->NextSiblingElement("ortho")) {
+			string id;
+			char *direction;
 			float near, far, left, right, top, bottom;
 			id = (char*) o->Attribute("id");
 			direction = (char*) o->Attribute("direction");
@@ -138,7 +148,8 @@ AnfScene::AnfScene(string filename) {
 
 			COrtho* co = new COrtho();
 
-			printf("near%f far%f left%f right%f top%f bottom%f\n", near, far, left, right, top, bottom);
+			printf("near%f far%f left%f right%f top%f bottom%f\n", near, far,
+					left, right, top, bottom);
 			co->near = near;
 			co->far = far;
 			co->left = left;
@@ -146,15 +157,12 @@ AnfScene::AnfScene(string filename) {
 			co->top = top;
 			co->bottom = bottom;
 			co->direction = direction;
-			//			Cameras::Ortho ortho;
-			//			ortho.bottom = bottom;
-			//			ortho.direction = *direction;
-			//			ortho.far = far;
-			//			ortho.left = left;
-			//			ortho.near = near;
-			//			ortho.right = right;
-			//			ortho.top = top;
+
 			cameras[id] = co;
+			camera_id.push_back(id);
+
+			if (id == initial)
+				this->initial = camera_id.size() - 1;
 		}
 	}
 
@@ -174,21 +182,44 @@ AnfScene::AnfScene(string filename) {
 		idl[7] = GL_LIGHT7;
 		int idlaux = 0;
 
-		for (TiXmlElement* l = lightsElement->FirstChildElement("light"); l != NULL; l = l->NextSiblingElement("light")) {
+		for (TiXmlElement* l = lightsElement->FirstChildElement("light");
+				l != NULL; l = l->NextSiblingElement("light")) {
 
 			Light light;
 			char *type;
 			type = (char*) l->Attribute("type");
+			if (type == 0)
+				continue;
 			float pos[4];
-			sscanf(l->Attribute("pos"), "%f %f %f", &pos[0], &pos[1], &pos[2]);
+			if (sscanf(l->Attribute("pos"), "%f %f %f", &pos[0], &pos[1],
+					&pos[2]) != 3)
+				continue;
 			pos[3] = 1;
+			char *id = (char*) l->Attribute("id");
+			if (id == 0)
+				continue;
+
+			bool enabled, marker;
+			if (l->QueryBoolAttribute("enabled", &enabled) != TIXML_SUCCESS)
+				continue;
+			if (l->QueryBoolAttribute("marker", &marker) != TIXML_SUCCESS)
+				continue;
 
 			if (strcmp(type, "spot") == 0) {
 				float target[3], angle, exponent;
-				l->QueryFloatAttribute("angle", &angle);
-				l->QueryFloatAttribute("exponent", &exponent);
-				sscanf(l->Attribute("target"), "%f %f %f", &target[0], &target[1], &target[2]);
-				float unit = sqrt(target[0] * target[0] + target[1] * target[1] + target[2] * target[2]);
+
+				if (l->QueryFloatAttribute("angle", &angle) != TIXML_SUCCESS)
+					continue;
+				if (l->QueryFloatAttribute("exponent", &exponent)
+						!= TIXML_SUCCESS)
+					continue;
+
+				if (sscanf(l->Attribute("target"), "%f %f %f", &target[0],
+						&target[1], &target[2]) != 3)
+					continue;
+				float unit = sqrt(
+						target[0] * target[0] + target[1] * target[1]
+								+ target[2] * target[2]);
 				for (int i = 0; i < 3; i++) {
 					target[i] = target[i] / unit;
 				}
@@ -197,16 +228,18 @@ AnfScene::AnfScene(string filename) {
 				glLightfv(idl[idlaux], GL_SPOT_DIRECTION, target);
 
 			}
+
 			light.cgfl = new CGFlight(idl[idlaux], pos);
 			++idlaux;
-			bool enabled, marker;
-			l->QueryBoolAttribute("enabled", &enabled);
-			l->QueryBoolAttribute("marker", &marker);
 
-			for (TiXmlElement* c = l->FirstChildElement("component"); c != NULL; c = c->NextSiblingElement("component")) {
+			for (TiXmlElement* c = l->FirstChildElement("component"); c != NULL;
+					c = c->NextSiblingElement("component")) {
 				char* type = (char*) c->Attribute("type");
 				float value[4];
-				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0], &value[1], &value[2], &value[3]);
+				for (int i = 0; i < 4; ++i)
+					value[i] = 0;
+				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0],
+						&value[1], &value[2], &value[3]);
 				if (strcmp(type, "ambient") == 0) {
 					light.cgfl->setAmbient(value);
 				} else if (strcmp(type, "diffuse") == 0) {
@@ -218,12 +251,16 @@ AnfScene::AnfScene(string filename) {
 
 			light.marker = marker;
 
-			if (strcmp(type, "spot") == 0)
+			if (enabled) {
+				light.enabled = true;
 				light.cgfl->enable();
-			else
-				light.cgfl->enable();
+			} else {
+				light.enabled = false;
+				light.cgfl->disable();
+			}
 			light.cgfl->update();
 			lights.push_back(light);
+			light_id.push_back(id);
 		}
 	}
 
@@ -232,13 +269,22 @@ AnfScene::AnfScene(string filename) {
 	if (textsElement == NULL)
 		printf("Textures block not found!\n");
 	else {
-		for (TiXmlElement* t = textsElement->FirstChildElement("texture"); t != NULL; t = t->NextSiblingElement("texture")) {
+		for (TiXmlElement* t = textsElement->FirstChildElement("texture");
+				t != NULL; t = t->NextSiblingElement("texture")) {
 			char *id, *file;
 			float textlength_s, textlength_t;
 			id = (char*) t->Attribute("id");
+			if (id == 0)
+				continue;
 			file = (char*) t->Attribute("file");
-			t->QueryFloatAttribute("texlength_s", &textlength_s);
-			t->QueryFloatAttribute("texlength_t", &textlength_t);
+			if (file == 0)
+				continue;
+			if (t->QueryFloatAttribute("texlength_s", &textlength_s)
+					!= TIXML_SUCCESS)
+				continue;
+			if (t->QueryFloatAttribute("texlength_t", &textlength_t)
+					!= TIXML_SUCCESS)
+				continue;
 			Textures::Texture text;
 			text.file = file;
 			text.texlength_s = textlength_s;
@@ -252,18 +298,29 @@ AnfScene::AnfScene(string filename) {
 	if (appearsElement == NULL)
 		printf("Appearences block not found!\n");
 	else {
-		for (TiXmlElement *a = appearsElement->FirstChildElement("appearance"); a != NULL; a = a->NextSiblingElement("appearance")) {
+		for (TiXmlElement *a = appearsElement->FirstChildElement("appearance");
+				a != NULL; a = a->NextSiblingElement("appearance")) {
 			char *id, *textureref;
 			float shininess;
-			a->QueryFloatAttribute("shininess", &shininess);
+			if (a->QueryFloatAttribute("shininess", &shininess)
+					!= TIXML_SUCCESS)
+				continue;
 			id = (char*) a->Attribute("id");
-
+			if (id == 0)
+				continue;
 			textureref = (char*) a->Attribute("textureref");
+			if (textureref == 0)
+				continue;
+
 			float ambient[4], diffuse[4], specular[4];
-			for (TiXmlElement* c = a->FirstChildElement("component"); c != NULL; c = c->NextSiblingElement("component")) {
+			for (TiXmlElement* c = a->FirstChildElement("component"); c != NULL;
+					c = c->NextSiblingElement("component")) {
 				char* type = (char*) c->Attribute("type");
 				float value[4];
-				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0], &value[1], &value[2], &value[3]);
+				for (int i = 0; i < 4; ++i)
+					value[i] = 0;
+				sscanf(c->Attribute("value"), "%f %f %f %f", &value[0],
+						&value[1], &value[2], &value[3]);
 				if (strcmp(type, "ambient") == 0) {
 					for (int i = 0; i < 4; i++)
 						ambient[i] = value[i];
@@ -274,10 +331,12 @@ AnfScene::AnfScene(string filename) {
 					for (int i = 0; i < 4; i++)
 						specular[i] = value[i];
 			}
-			CGFappearance *ap = new CGFappearance(ambient, diffuse, specular, shininess);
+
+			CGFappearance *ap = new CGFappearance(ambient, diffuse, specular,
+					shininess);
 			Appearence app;
 			app.appearence = ap;
-			if (textureref != NULL) {
+			if (textureref != NULL && textures.texture[textureref].file != "") {
 				app.textureref = textureref;
 				ap->setTexture(textures.texture[textureref].file);
 			}
@@ -291,44 +350,75 @@ AnfScene::AnfScene(string filename) {
 		printf("Graph block not found!\n");
 	else {
 		char *rootid = (char*) graphElement->Attribute("rootid");
+		if (rootid == 0) {
+			cout << "No root id!\n";
+			return;
+		}
 		graph.rootid = rootid;
 
-		for (TiXmlElement* n = graphElement->FirstChildElement("node"); n != NULL; n = n->NextSiblingElement("node")) {
+		for (TiXmlElement* n = graphElement->FirstChildElement("node");
+				n != NULL; n = n->NextSiblingElement("node")) {
 
 			Graph::Node node;
 			char* id = (char*) n->Attribute("id");
+			if (id == 0)
+				continue;
+
 			glLoadIdentity();
 			TiXmlElement* transformElement = n->FirstChildElement("transforms");
-			for (TiXmlElement* t = transformElement->FirstChildElement("transform"); t != NULL; t = t->NextSiblingElement("transform")) {
+			if (transformElement != NULL) {
+				for (TiXmlElement* t = transformElement->FirstChildElement(
+						"transform"); t != NULL;
+						t = t->NextSiblingElement("transform")) {
 
-				char* type;
-				type = (char*) t->Attribute("type");
+					char* type;
+					type = (char*) t->Attribute("type");
 
-				if (strcmp(type, "translate") == 0) {
-					float to[3];
-					sscanf(t->Attribute("to"), "%f %f %f", &to[0], &to[1], &to[2]);
-					glTranslatef(to[0], to[1], to[2]);
-				} else if (strcmp(type, "rotate") == 0) {
-					string axis;
-					float angle;
-					axis = (char*) t->Attribute("axis");
-					t->QueryFloatAttribute("angle", &angle);
-					glRotatef(angle, axis == "x", axis == "y", axis == "z");
-				} else {
-					float factor[3];
-					sscanf(t->Attribute("factor"), "%f %f %f", &factor[0], &factor[1], &factor[2]);
-					glScalef(factor[0], factor[1], factor[2]);
+					if (strcmp(type, "translate") == 0) {
+						float to[3];
+						for (int i = 0; i < 3; ++i)
+							to[i] = 0;
+						sscanf(t->Attribute("to"), "%f %f %f", &to[0], &to[1],
+								&to[2]);
+						glTranslatef(to[0], to[1], to[2]);
+					} else if (strcmp(type, "rotate") == 0) {
+						string axis;
+						float angle;
+						axis = (char*) t->Attribute("axis");
+						if (t->QueryFloatAttribute("angle", &angle)
+								!= TIXML_SUCCESS)
+							continue;
+						glRotatef(angle, axis == "x", axis == "y", axis == "z");
+					} else {
+						float factor[3];
+						for (int i = 0; i < 3; ++i)
+							factor[i] = 0;
+						sscanf(t->Attribute("factor"), "%f %f %f", &factor[0],
+								&factor[1], &factor[2]);
+						glScalef(factor[0], factor[1], factor[2]);
+					}
 				}
 			}
 			glGetFloatv(GL_MODELVIEW_MATRIX, node.matrix);
-			TiXmlElement* apElement = n->FirstChildElement("appearanceref");
-			char* appearancerefId = (char*) apElement->Attribute("id");
-			node.appearencerefID = appearancerefId;
 
-			TiXmlElement* primitivesElement = n->FirstChildElement("primitives");
+			char* appearancerefId;
+			TiXmlElement* apElement = n->FirstChildElement("appearanceref");
+			if (apElement != NULL) {
+				appearancerefId = (char*) apElement->Attribute("id");
+				node.appearencerefID = appearancerefId;
+			}
+
+			TiXmlElement* primitivesElement = n->FirstChildElement(
+					"primitives");
 			if (primitivesElement != NULL) {
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("rectangle"); p != NULL; p = p->NextSiblingElement("rectangle")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement(
+						"rectangle"); p != NULL;
+						p = p->NextSiblingElement("rectangle")) {
 					float xy1[2], xy2[2];
+					for (int i = 0; i < 2; ++i)
+						xy1[i] = 0;
+					for (int i = 0; i < 2; ++i)
+						xy2[i] = 0;
 					sscanf(p->Attribute("xy1"), "%f %f", &xy1[0], &xy1[1]);
 					sscanf(p->Attribute("xy2"), "%f %f", &xy2[0], &xy2[1]);
 					Graph::Node::Rectangle rec;
@@ -338,11 +428,23 @@ AnfScene::AnfScene(string filename) {
 						rec.xy2.push_back(xy2[i]);
 					node.rectangle.push_back(rec);
 				}
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("triangle"); p != NULL; p = p->NextSiblingElement("triangle")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement(
+						"triangle"); p != NULL;
+						p = p->NextSiblingElement("triangle")) {
 					float xyz1[3], xyz2[3], xyz3[3];
-					sscanf(p->Attribute("xyz1"), "%f %f %f", &xyz1[0], &xyz1[1], &xyz1[2]);
-					sscanf(p->Attribute("xyz2"), "%f %f %f", &xyz2[0], &xyz2[1], &xyz2[2]);
-					sscanf(p->Attribute("xyz3"), "%f %f %f", &xyz3[0], &xyz3[1], &xyz3[2]);
+
+					for (int i = 0; i < 3; ++i)
+						xyz1[i] = 0;
+					for (int i = 0; i < 3; ++i)
+						xyz2[i] = 0;
+					for (int i = 0; i < 3; ++i)
+						xyz3[i] = 0;
+					sscanf(p->Attribute("xyz1"), "%f %f %f", &xyz1[0], &xyz1[1],
+							&xyz1[2]);
+					sscanf(p->Attribute("xyz2"), "%f %f %f", &xyz2[0], &xyz2[1],
+							&xyz2[2]);
+					sscanf(p->Attribute("xyz3"), "%f %f %f", &xyz3[0], &xyz3[1],
+							&xyz3[2]);
 					Graph::Node::Triangle tr;
 					for (int i = 0; i < 3; ++i)
 						tr.xyz1.push_back(xyz1[i]);
@@ -352,14 +454,24 @@ AnfScene::AnfScene(string filename) {
 						tr.xyz3.push_back(xyz3[i]);
 					node.triangle.push_back(tr);
 				}
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("cylinder"); p != NULL; p = p->NextSiblingElement("cylinder")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement(
+						"cylinder"); p != NULL;
+						p = p->NextSiblingElement("cylinder")) {
 					float base, top, height;
 					int slices, stacks;
-					p->QueryFloatAttribute("base", &base);
-					p->QueryFloatAttribute("top", &top);
-					p->QueryFloatAttribute("height", &height);
-					p->QueryIntAttribute("slices", &slices);
-					p->QueryIntAttribute("stacks", &stacks);
+					if (p->QueryFloatAttribute("base", &base) != TIXML_SUCCESS)
+						continue;
+					if (p->QueryFloatAttribute("top", &top) != TIXML_SUCCESS)
+						continue;
+					if (p->QueryFloatAttribute("height", &height)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("slices", &slices)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("stacks", &stacks)
+							!= TIXML_SUCCESS)
+						continue;
 					Graph::Node::Cylinder c;
 					c.base = base;
 					c.height = height;
@@ -368,25 +480,43 @@ AnfScene::AnfScene(string filename) {
 					c.top = top;
 					node.cylinder.push_back(c);
 				}
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("sphere"); p != NULL; p = p->NextSiblingElement("sphere")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement(
+						"sphere"); p != NULL;
+						p = p->NextSiblingElement("sphere")) {
 					float radius;
 					int slices, stacks;
-					p->QueryFloatAttribute("radius", &radius);
-					p->QueryIntAttribute("slices", &slices);
-					p->QueryIntAttribute("stacks", &stacks);
+
+					if (p->QueryFloatAttribute("radius", &radius)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("slices", &slices)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("stacks", &stacks)
+							!= TIXML_SUCCESS)
+						continue;
 					Graph::Node::Sphere s;
 					s.radius = radius;
 					s.slices = slices;
 					s.stacks = stacks;
 					node.sphere.push_back(s);
 				}
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("torus"); p != NULL; p = p->NextSiblingElement("torus")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement(
+						"torus"); p != NULL;
+						p = p->NextSiblingElement("torus")) {
 					float inner, outer;
 					int slices, loops;
-					p->QueryFloatAttribute("inner", &inner);
-					p->QueryFloatAttribute("outer", &outer);
-					p->QueryIntAttribute("slices", &slices);
-					p->QueryIntAttribute("loops", &loops);
+					if (p->QueryFloatAttribute("inner", &inner)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryFloatAttribute("outer", &outer)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("slices", &slices)
+							!= TIXML_SUCCESS)
+						continue;
+					if (p->QueryIntAttribute("loops", &loops) != TIXML_SUCCESS)
+						continue;
 					Graph::Node::Torus t;
 					t.inner = inner;
 					t.outer = outer;
@@ -395,10 +525,13 @@ AnfScene::AnfScene(string filename) {
 					node.torus.push_back(t);
 				}
 			}
-			TiXmlElement* descendantsElement = n->FirstChildElement("descendants");
 
+			TiXmlElement* descendantsElement = n->FirstChildElement(
+					"descendants");
 			if (descendantsElement != NULL) {
-				for (TiXmlElement* d = descendantsElement->FirstChildElement("noderef"); d != NULL; d = d->NextSiblingElement("noderef")) {
+				for (TiXmlElement* d = descendantsElement->FirstChildElement(
+						"noderef"); d != NULL;
+						d = d->NextSiblingElement("noderef")) {
 					char* idref = (char*) d->Attribute("id");
 					Graph::Node* p;
 					p = &graph.nodes[idref];
@@ -449,15 +582,8 @@ void AnfScene::init() {
 		glShadeModel(GL_SMOOTH);
 	else if (globals.drawing.shadding == "flat")
 		glShadeModel(GL_FLAT);
-
-	if (globals.drawing.mode == "fill")
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else if (globals.drawing.mode == "line")
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else if (globals.drawing.mode == "point")
-		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-
-	glClearColor(globals.drawing.background[0], globals.drawing.background[1], globals.drawing.background[2], globals.drawing.background[3]);
+	glClearColor(globals.drawing.background[0], globals.drawing.background[1],
+			globals.drawing.background[2], globals.drawing.background[3]);
 	glNormal3f(0, 0, 1);
 
 	setUpdatePeriod(30);
@@ -511,69 +637,74 @@ void drawSphere(float radius, int slices, int stacks) {
 }
 void drawTorus(float inner, float outer, int slices, int rings) {
 
+	double pi = acos(-1.0);
+	float vNormal[3];
+	double majorStep = 2.0f * pi / slices;
+	double minorStep = 2.0f * pi / rings;
 	int i, j;
-	GLfloat theta, phi, theta1;
-	GLfloat cosTheta, sinTheta;
-	GLfloat cosTheta1, sinTheta1;
-	GLfloat ringDelta, sideDelta;
-
-	ringDelta = 2.0 * M_PI / rings;
-	sideDelta = 2.0 * M_PI / slices;
-
-	theta = 0.0;
-	cosTheta = 1.0;
-	sinTheta = 0.0;
-	for (i = rings - 1; i >= 0; i--) {
-		theta1 = theta + ringDelta;
-		cosTheta1 = cos(theta1);
-		sinTheta1 = sin(theta1);
-		glBegin(GL_QUAD_STRIP);
-		phi = 0.0;
-		for (j = slices; j >= 0; j--) {
-			GLfloat cosPhi, sinPhi, dist;
-
-			phi += sideDelta;
-			cosPhi = cos(phi);
-			sinPhi = sin(phi);
-			dist = outer + inner * cosPhi;
-
-			glNormal3f(cosTheta1 * cosPhi, -sinTheta1 * cosPhi, sinPhi);
-			glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, inner * sinPhi);
-			glNormal3f(cosTheta * cosPhi, -sinTheta * cosPhi, sinPhi);
-			glVertex3f(cosTheta * dist, -sinTheta * dist, inner * sinPhi);
+	for (i = 0; i < slices; ++i) {
+		double a0 = i * majorStep;
+		double a1 = a0 + majorStep;
+		GLfloat x0 = (GLfloat) cos(a0);
+		GLfloat y0 = (GLfloat) sin(a0);
+		GLfloat x1 = (GLfloat) cos(a1);
+		GLfloat y1 = (GLfloat) sin(a1);
+		glBegin(GL_TRIANGLE_STRIP);
+		for (j = 0; j <= rings; ++j) {
+			double b = j * minorStep;
+			GLfloat c = (GLfloat) cos(b);
+			GLfloat r = inner * c + outer;
+			GLfloat z = inner * (GLfloat) sin(b);
+			// First point
+			glTexCoord2f((float) (i) / (float) (rings),
+					(float) (j) / (float) (slices));
+			vNormal[0] = x0 * c;
+			vNormal[1] = y0 * c;
+			vNormal[2] = z / inner;
+			//gltNormalizeVector(vNormal);
+			glNormal3fv(vNormal);
+			glVertex3f(x0 * r, y0 * r, z);
+			glTexCoord2f((float) (i + 1) / (float) (rings),
+					(float) (j) / (float) (slices));
+			vNormal[0] = x1 * c;
+			vNormal[1] = y1 * c;
+			vNormal[2] = z / inner;
+			glNormal3f(vNormal[0], vNormal[1], vNormal[2]);
+			glVertex3f(x1 * r, y1 * r, z);
 		}
 		glEnd();
-		theta = theta1;
-		cosTheta = cosTheta1;
-		sinTheta = sinTheta1;
 	}
-
 }
 
 void AnfScene::drawNode(Graph::Node* n, string appearencerefID) {
 	glPushMatrix();
-
 	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0) {
 		appearances[n->appearencerefID].appearence->apply();
 		appearencerefID = n->appearencerefID;
-	} else {
+	} else if (appearencerefID != "") {
 		appearances[appearencerefID].appearence->apply();
 	}
 	glMultMatrixf(n->matrix);
 	for (unsigned int i = 0; i < n->rectangle.size(); ++i) {
-		drawRectangle(n->rectangle[i].xy1[0], n->rectangle[i].xy1[1], n->rectangle[i].xy2[0], n->rectangle[i].xy2[1]);
+		drawRectangle(n->rectangle[i].xy1[0], n->rectangle[i].xy1[1],
+				n->rectangle[i].xy2[0], n->rectangle[i].xy2[1]);
 	}
 	for (unsigned int i = 0; i < n->triangle.size(); ++i) {
-		drawTriangle(n->triangle[i].xyz1, n->triangle[i].xyz2, n->triangle[i].xyz3);
+		drawTriangle(n->triangle[i].xyz1, n->triangle[i].xyz2,
+				n->triangle[i].xyz3);
 	}
 	for (unsigned int i = 0; i < n->torus.size(); ++i) {
-		drawTorus(n->torus[i].inner, n->torus[i].outer, n->torus[i].slices, n->torus[i].loops);
+		drawTorus(n->torus[i].inner, n->torus[i].outer, n->torus[i].slices,
+				n->torus[i].loops);
 	}
 	for (unsigned int i = 0; i < n->cylinder.size(); ++i) {
-		drawCylinder(n->cylinder[i].base, n->cylinder[i].top, n->cylinder[i].height, n->cylinder[i].slices, n->cylinder[i].stacks);
+		drawCylinder(n->cylinder[i].base, n->cylinder[i].top,
+				n->cylinder[i].height, n->cylinder[i].slices,
+				n->cylinder[i].stacks);
 	}
 	for (unsigned int i = 0; i < n->sphere.size(); ++i) {
-		drawSphere(n->sphere[i].radius, n->sphere[i].slices, n->sphere[i].stacks);
+		drawSphere(n->sphere[i].radius, n->sphere[i].slices,
+				n->sphere[i].stacks);
 	}
 	for (unsigned int i = 0; i < n->descendant.size(); ++i) {
 		drawNode(n->descendant[i], appearencerefID);
@@ -582,12 +713,19 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID) {
 }
 
 void AnfScene::display() {
+
+	if (globals.drawing.mode == 0)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	else if (globals.drawing.mode == 1)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	cameras[initial]->apply();
-
+	if (initial < camera_id.size())
+		cameras[camera_id[initial]]->apply();
+	else
+		CGFscene::activeCamera->applyView();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -597,7 +735,6 @@ void AnfScene::display() {
 		if (lights[i].marker)
 			lights[i].cgfl->draw();
 	}
-	axis.draw();
 	drawNode(&graph.nodes[graph.rootid], "");
 
 	glutSwapBuffers();
