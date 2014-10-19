@@ -736,7 +736,7 @@ void AnfScene::display() {
 		if (lights[i].marker)
 			lights[i].cgfl->draw();
 	}
-	axis.draw();
+//	axis.draw();
 	drawNode(&graph.nodes[graph.rootid], "");
 
 	glutSwapBuffers();
