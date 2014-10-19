@@ -124,11 +124,9 @@ public:
 	float near, far, angle, pos[3], target[3];
 	void apply() {
 		float ratio = ((float) CGFapplication::width) / ((float) CGFapplication::height);
-		glPushMatrix();
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(angle, ratio, near, far);
-		glPopMatrix();
 		gluLookAt(pos[0], pos[1], pos[2], target[0], target[1], target[2], 0, 1, 0);
 	}
 };

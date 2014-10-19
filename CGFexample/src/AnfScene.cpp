@@ -172,7 +172,7 @@ AnfScene::AnfScene(string filename) {
 		idl[5] = GL_LIGHT5;
 		idl[6] = GL_LIGHT6;
 		idl[7] = GL_LIGHT7;
-		int i = 0;
+		int idlaux = 0;
 
 		for (TiXmlElement* l = lightsElement->FirstChildElement("light"); l != NULL; l = l->NextSiblingElement("light")) {
 
@@ -192,13 +192,13 @@ AnfScene::AnfScene(string filename) {
 				for (int i = 0; i < 3; i++) {
 					target[i] = target[i] / unit;
 				}
-				glLightf(idl[i], GL_SPOT_CUTOFF, angle);
-				glLightf(idl[i], GL_SPOT_EXPONENT, exponent);
-				glLightfv(idl[i], GL_SPOT_DIRECTION, target);
+				glLightf(idl[idlaux], GL_SPOT_CUTOFF, angle);
+				glLightf(idl[idlaux], GL_SPOT_EXPONENT, exponent);
+				glLightfv(idl[idlaux], GL_SPOT_DIRECTION, target);
 
 			}
-			light.cgfl = new CGFlight(idl[i], pos);
-			++i;
+			light.cgfl = new CGFlight(idl[idlaux], pos);
+			++idlaux;
 			bool enabled, marker;
 			l->QueryBoolAttribute("enabled", &enabled);
 			l->QueryBoolAttribute("marker", &marker);
@@ -586,12 +586,15 @@ void AnfScene::display() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-//	cameras[initial]->apply();
-	CGFscene::activeCamera->applyView();
+	cameras[initial]->apply();
 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	CGFapplication::activeApp->forceRefresh();
 	for (unsigned int i = 0; i < lights.size(); ++i) {
 		lights[i].cgfl->update();
-
+		if (lights[i].marker)
 			lights[i].cgfl->draw();
 	}
 	axis.draw();
