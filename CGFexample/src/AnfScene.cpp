@@ -86,7 +86,8 @@ AnfScene::AnfScene(string filename) {
 	else {
 		char* initial;
 		initial = (char*) camerasElement->Attribute("initial");
-		cameras.initial = initial;
+
+		this->initial = initial;
 		for (TiXmlElement* p = camerasElement->FirstChildElement("perspective"); p != NULL; p = p->NextSiblingElement("perspective")) {
 			char* id;
 			float near, far, angle;
@@ -97,15 +98,30 @@ AnfScene::AnfScene(string filename) {
 			p->QueryFloatAttribute("angle", &angle);
 			sscanf(p->Attribute("pos"), "%f %f %f", &pos[0], &pos[1], &pos[2]);
 			sscanf(p->Attribute("target"), "%f %f %f", &target[0], &target[1], &target[2]);
-			Cameras::Perspective perspective;
-			perspective.angle = angle;
-			perspective.near = near;
-			perspective.far = far;
-			for (int i = 0; i < 3; ++i)
-				perspective.pos.push_back(pos[i]);
-			for (int i = 0; i < 3; ++i)
-				perspective.target.push_back(target[i]);
-			cameras.camera[id] = perspective;
+
+			CPerspective* cp = new CPerspective();
+
+			cp->angle = angle;
+			cp->far = far;
+			cp->near = near;
+
+			cp->pos[0] = pos[0];
+			cp->pos[1] = pos[1];
+			cp->pos[2] = pos[2];
+
+			cp->target[0] = target[0];
+			cp->target[1] = target[1];
+			cp->target[2] = target[2];
+
+			//			Cameras::Perspective perspective;
+			//			perspective.angle = angle;
+			//			perspective.near = near;
+			//			perspective.far = far;
+			//			for (int i = 0; i < 3; ++i)
+			//				perspective.pos.push_back(pos[i]);
+			//			for (int i = 0; i < 3; ++i)
+			//				perspective.target.push_back(target[i]);
+			cameras[id] = cp;
 
 		}
 		for (TiXmlElement* o = camerasElement->FirstChildElement("ortho"); o != NULL; o = o->NextSiblingElement("ortho")) {
@@ -119,15 +135,26 @@ AnfScene::AnfScene(string filename) {
 			o->QueryFloatAttribute("right", &right);
 			o->QueryFloatAttribute("top", &top);
 			o->QueryFloatAttribute("bottom", &bottom);
-			Cameras::Ortho ortho;
-			ortho.bottom = bottom;
-			ortho.direction = *direction;
-			ortho.far = far;
-			ortho.left = left;
-			ortho.near = near;
-			ortho.right = right;
-			ortho.top = top;
-			cameras.camera[id] = ortho;
+
+			COrtho* co = new COrtho();
+
+			printf("near%f far%f left%f right%f top%f bottom%f\n", near, far, left, right, top, bottom);
+			co->near = near;
+			co->far = far;
+			co->left = left;
+			co->right = right;
+			co->top = top;
+			co->bottom = bottom;
+			co->direction = direction;
+			//			Cameras::Ortho ortho;
+			//			ortho.bottom = bottom;
+			//			ortho.direction = *direction;
+			//			ortho.far = far;
+			//			ortho.left = left;
+			//			ortho.near = near;
+			//			ortho.right = right;
+			//			ortho.top = top;
+			cameras[id] = co;
 		}
 	}
 
@@ -247,7 +274,7 @@ AnfScene::AnfScene(string filename) {
 					for (int i = 0; i < 4; i++)
 						specular[i] = value[i];
 			}
-			CGFappearance *ap = new CGFappearance(ambient, specular, diffuse, shininess);
+			CGFappearance *ap = new CGFappearance(ambient, diffuse, specular, shininess);
 			Appearence app;
 			app.appearence = ap;
 			if (textureref != NULL) {
@@ -438,6 +465,7 @@ void AnfScene::init() {
 
 void drawRectangle(float x1, float y1, float x2, float y2) {
 	glBegin(GL_POLYGON);
+	glNormal3f(0, 0, 1);
 	glTexCoord2f(0, 0);
 	glVertex2f(x1, y1);
 	glTexCoord2f(1, 0);
@@ -522,11 +550,15 @@ void drawTorus(float inner, float outer, int slices, int rings) {
 
 }
 
-void AnfScene::drawNode(Graph::Node* n) {
+void AnfScene::drawNode(Graph::Node* n, string appearencerefID) {
 	glPushMatrix();
 
-	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0)
+	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0) {
 		appearances[n->appearencerefID].appearence->apply();
+		appearencerefID = n->appearencerefID;
+	} else {
+		appearances[appearencerefID].appearence->apply();
+	}
 	glMultMatrixf(n->matrix);
 	for (unsigned int i = 0; i < n->rectangle.size(); ++i) {
 		drawRectangle(n->rectangle[i].xy1[0], n->rectangle[i].xy1[1], n->rectangle[i].xy2[0], n->rectangle[i].xy2[1]);
@@ -544,7 +576,7 @@ void AnfScene::drawNode(Graph::Node* n) {
 		drawSphere(n->sphere[i].radius, n->sphere[i].slices, n->sphere[i].stacks);
 	}
 	for (unsigned int i = 0; i < n->descendant.size(); ++i) {
-		drawNode(n->descendant[i]);
+		drawNode(n->descendant[i], appearencerefID);
 	}
 	glPopMatrix();
 }
@@ -554,15 +586,16 @@ void AnfScene::display() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+//	cameras[initial]->apply();
 	CGFscene::activeCamera->applyView();
 
-	for (int i = 0; i < lights.size(); ++i) {
+	for (unsigned int i = 0; i < lights.size(); ++i) {
 		lights[i].cgfl->update();
-		if (lights[i].marker)
+
 			lights[i].cgfl->draw();
 	}
 	axis.draw();
-	drawNode(&graph.nodes[graph.rootid]);
+	drawNode(&graph.nodes[graph.rootid], "");
 
 	glutSwapBuffers();
 }

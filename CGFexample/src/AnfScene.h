@@ -11,15 +11,16 @@ public:
 	AnfScene(string file);
 	void init();
 	void display();
-	void drawNode(Graph::Node* n);
+	void drawNode(Graph::Node* n,string appearencerefID);
 
 	Globals globals;
-	Cameras cameras;
 	Textures textures;
 	Graph graph;
 
 	map<string, Appearence> appearances;
 	vector<Light> lights;
+	map<string,Camera*> cameras;
+	string initial;
 	~AnfScene();
 };
 

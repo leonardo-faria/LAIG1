@@ -1,6 +1,6 @@
 <anf>
 	<globals>
-		<drawing mode="fill" shading="gourand" background="0 0 0 1.0" />
+		<drawing mode="fill" shading="gourand" background="0 0 0 0" />
 		<culling face="back" order="ccw" />
 		<lighting doublesided="true" local="true" enabled="true"
 			ambient="0.1 0.1 0.1 1.0" />
@@ -46,30 +46,30 @@
 	</textures>
 
 	<appearances>
-		<appearance id="sea" shininess="1.0" textureref="seaText">
+		<appearance id="sea" shininess="1.0" >
 			<component type="ambient" value="0 0 1 1.0" />
 			<component type="diffuse" value="0 0 1 1.0" />
 			<component type="specular" value="0 0 1 1.0" />
 		</appearance>
-		<appearance id="plank" shininess="1.0" textureref="plankText">
-			<component type="ambient" value="0.6 0.6 0.6 1.0" />
-			<component type="diffuse" value="0.6 0.6 0.6 1.0" />
-			<component type="specular" value="0.6 0.6 0.6 1.0" />
+		<appearance id="plank" shininess="1.0" >
+			<component type="ambient" value="0.6 1 0 1.0" />
+			<component type="diffuse" value="0.6 1 0 1.0" />
+			<component type="specular" value="0.6 1 0 1.0" />
 		</appearance>
-		<appearance id="sail" shininess="1.0" textureref="sailText">
+		<appearance id="sail" shininess="1.0" >
 			<component type="ambient" value="0.8 0.8 0.8 1.0" />
 			<component type="diffuse" value="0 0.8 0 1.0" />
 			<component type="specular" value="0.8 0.8 0.8 1.0" />
 		</appearance>
-		<appearance id="buoy" shininess="1.0" textureref="buoyText">
+		<appearance id="buoy" shininess="1.0">
 			<component type="ambient" value="1.0 1.0 1.0 1.0" />
 			<component type="diffuse" value="1.0 1.0 1.0 1.0" />
 			<component type="specular" value="1.0 1.0 1.0 1.0" />
 		</appearance>
-		<appearance id="pole" shininess="1.0" textureref="poleText">
-			<component type="ambient" value="0 0 1 1.0" />
-			<component type="diffuse" value="0 0 1 1.0" />
-			<component type="specular" value="0 0 1 1.0" />
+		<appearance id="pole" shininess="1.0" >
+			<component type="ambient" value="0 0 0.1 1.0" />
+			<component type="diffuse" value="0 0 0.1 1.0" />
+			<component type="specular" value="0 0 0.1 1.0" />
 		</appearance>
 	</appearances>
 
