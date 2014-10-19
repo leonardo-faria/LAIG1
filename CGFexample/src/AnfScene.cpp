@@ -481,7 +481,7 @@ void drawTriangle(vector<float> v1, vector<float> v2, vector<float> v3) {
 	glTexCoord2f(0, 0);
 	glVertex3f(v1[0], v1[1], v1[2]);
 	glTexCoord2f(1, 0);
-	glVertex3f(v2[0], v2[1], v3[2]);
+	glVertex3f(v2[0], v2[1], v2[2]);
 	glTexCoord2f(0.5, 1);
 	glVertex3f(v3[0], v3[1], v3[2]);
 	glEnd();
