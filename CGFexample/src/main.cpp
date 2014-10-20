@@ -20,7 +20,11 @@ int main(int argc, char* argv[]) {
 
 	try {
 		app.init(&argc, argv);
-		app.setScene(new AnfScene("shipwreck.anf"));
+		if (argc < 2) {
+			printf("currect use: ./cgfexample <anf destination>");
+			exit(1);
+		}
+		app.setScene(new AnfScene(argv[1]));
 		app.setInterface(new Interface());
 
 		app.run();
