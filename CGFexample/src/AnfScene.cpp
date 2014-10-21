@@ -8,7 +8,7 @@ float pi = acos(-1.0);
 float deg2rad = pi / 180.0;
 
 #define BOARD_HEIGHT 6.0
-#define BOARD_WIDTH 6.4
+#define BOAsRD_WIDTH 6.4
 
 AnfScene::AnfScene(string filename) {
 	TiXmlElement* globalsElement;
@@ -310,9 +310,6 @@ AnfScene::AnfScene(string filename) {
 			if (id == 0)
 				continue;
 			textureref = (char*) a->Attribute("textureref");
-			if (textureref == 0)
-				continue;
-
 			float ambient[4], diffuse[4], specular[4];
 			for (TiXmlElement* c = a->FirstChildElement("component"); c != NULL;
 					c = c->NextSiblingElement("component")) {
@@ -332,7 +329,6 @@ AnfScene::AnfScene(string filename) {
 					for (int i = 0; i < 4; i++)
 						specular[i] = value[i];
 			}
-
 			CGFappearance *ap = new CGFappearance(ambient, diffuse, specular,
 					shininess);
 			Appearence app;
@@ -548,6 +544,8 @@ AnfScene::AnfScene(string filename) {
 }
 
 void AnfScene::init() {
+	glEnable (GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//	Declares and enables a light
 	if (globals.culling.face == "none")
 		glCullFace(GL_NONE);
@@ -731,11 +729,13 @@ void AnfScene::display() {
 	glLoadIdentity();
 
 	CGFapplication::activeApp->forceRefresh();
+	glPushMatrix();
 	for (unsigned int i = 0; i < lights.size(); ++i) {
 		lights[i].cgfl->update();
 		if (lights[i].marker)
 			lights[i].cgfl->draw();
 	}
+	glPopMatrix();
 //	axis.draw();
 	drawNode(&graph.nodes[graph.rootid], "");
 

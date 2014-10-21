@@ -21,10 +21,10 @@ int main(int argc, char* argv[]) {
 	try {
 		app.init(&argc, argv);
 		if (argc < 2) {
-			printf("currect use: ./cgfexample <anf destination>");
+			printf("currect use: ./cgfexample <anf destination>\n");
 			exit(1);
 		}
-		app.setScene(new AnfScene(argv[1]));
+		app.setScene(new AnfScene("LAIG_TP1_ANF_T01_G03_v2.anf"));
 		app.setInterface(new Interface());
 
 		app.run();
