@@ -31,9 +31,9 @@ public:
 		culling.order = "ccw";
 		for (int i = 0; i < 4; ++i)
 			lighting.ambient.push_back(0);
-		lighting.doublesided=false;
-		lighting.enabled=true;
-		lighting.local=true;
+		lighting.doublesided = false;
+		lighting.enabled = true;
+		lighting.local = true;
 	}
 	Drawing drawing;
 	Culling culling;
@@ -93,6 +93,8 @@ public:
 			int slices, loops;
 		};
 		float matrix[16];
+		bool displaylist;
+		int list;
 		string appearencerefID;
 		vector<Rectangle> rectangle;
 		vector<Triangle> triangle;
@@ -101,6 +103,8 @@ public:
 		vector<Torus> torus;
 		vector<Node*> descendant;
 		Node() {
+			list = 0;
+			displaylist = false;
 			for (int i = 0; i < 16; ++i)
 				matrix[i] = 0;
 		}
@@ -144,3 +148,18 @@ public:
 	}
 
 };
+
+//virtual class Animation {
+//public:
+//	int time;
+//};
+//
+//class LinearAnimation: public Animation {
+//public:
+//	vector<int[3]> cpoints;
+//};
+//
+//class CircularAnimation: public Animation {
+//public:
+//
+//};

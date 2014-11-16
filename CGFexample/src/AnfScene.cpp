@@ -11,12 +11,14 @@ float deg2rad = pi / 180.0;
 #define BOAsRD_WIDTH 6.4
 
 AnfScene::AnfScene(string filename) {
+	listNumber = 1;
 	TiXmlElement* globalsElement;
 	TiXmlElement* camerasElement;
 	TiXmlElement* lightsElement;
 	TiXmlElement* textsElement;
 	TiXmlElement* appearsElement;
 	TiXmlElement* graphElement;
+	TiXmlElement* animationsElement;
 
 	TiXmlDocument *doc = new TiXmlDocument(filename.c_str());
 
@@ -38,6 +40,7 @@ AnfScene::AnfScene(string filename) {
 	lightsElement = anfElement->FirstChildElement("lights");
 	textsElement = anfElement->FirstChildElement("textures");
 	appearsElement = anfElement->FirstChildElement("appearances");
+	animationsElement = anfElement->FirstChildElement("animations");
 	graphElement = anfElement->FirstChildElement("graph");
 
 	printf("Starting globals\n");
@@ -222,14 +225,13 @@ AnfScene::AnfScene(string filename) {
 								+ target[2] * target[2]);
 				for (int i = 0; i < 3; i++) {
 					target[i] = target[i] / unit;
+					cout << "target " << target[i] << endl;
 				}
 				glLightf(idl[idlaux], GL_SPOT_CUTOFF, angle);
 				glLightf(idl[idlaux], GL_SPOT_EXPONENT, exponent);
 				glLightfv(idl[idlaux], GL_SPOT_DIRECTION, target);
 
 			}
-
-
 			light.cgfl = new CGFlight(idl[idlaux], pos);
 			++idlaux;
 
@@ -341,7 +343,16 @@ AnfScene::AnfScene(string filename) {
 		}
 	}
 
-	printf("Read appearences\nStarting graph\n");
+	printf("Read appearences\nStarting animations\n");
+
+	if (animationsElement == NULL)
+		printf("Animations block not found!\n");
+	else {
+		for (TiXmlElement *a = animationsElement->FirstChildElement(
+				"animation"); a != NULL; a->NextSiblingElement("animation")) {
+
+		}
+	}
 
 	if (graphElement == NULL)
 		printf("Graph block not found!\n");
@@ -361,6 +372,9 @@ AnfScene::AnfScene(string filename) {
 			if (id == 0)
 				continue;
 
+			bool displaylist = false;
+			n->QueryBoolAttribute("displaylist", &displaylist);
+			node.displaylist = displaylist;
 			glLoadIdentity();
 			TiXmlElement* transformElement = n->FirstChildElement("transforms");
 			if (transformElement != NULL) {
@@ -544,8 +558,8 @@ AnfScene::AnfScene(string filename) {
 }
 
 void AnfScene::init() {
-	glEnable (GL_BLEND);
-	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//	Declares and enables a light
 	if (globals.culling.face == "none")
 		glCullFace(GL_NONE);
@@ -586,6 +600,8 @@ void AnfScene::init() {
 	glNormal3f(0, 0, 1);
 
 	setUpdatePeriod(30);
+
+	createList(&graph.nodes[graph.rootid], "");
 }
 
 void drawRectangle(float x1, float y1, float x2, float y2) {
@@ -675,7 +691,11 @@ void drawTorus(float inner, float outer, int slices, int rings) {
 	}
 }
 
-void AnfScene::drawNode(Graph::Node* n, string appearencerefID) {
+void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
+	if (n->displaylist && !init) {
+		glCallList(n->list);
+		return;
+	}
 	glPushMatrix();
 	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0) {
 		appearances[n->appearencerefID].appearence->apply();
@@ -706,7 +726,7 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID) {
 				n->sphere[i].stacks);
 	}
 	for (unsigned int i = 0; i < n->descendant.size(); ++i) {
-		drawNode(n->descendant[i], appearencerefID);
+		drawNode(n->descendant[i], appearencerefID, init);
 	}
 	glPopMatrix();
 }
@@ -721,7 +741,7 @@ void AnfScene::display() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	if (initial < camera_id.size())
+	if (initial < (int) camera_id.size())
 		cameras[camera_id[initial]]->apply();
 	else
 		CGFscene::activeCamera->applyView();
@@ -737,7 +757,7 @@ void AnfScene::display() {
 	}
 	glPopMatrix();
 //	axis.draw();
-	drawNode(&graph.nodes[graph.rootid], "");
+	drawNode(&graph.nodes[graph.rootid], "", false);
 
 	glutSwapBuffers();
 }
@@ -745,3 +765,19 @@ void AnfScene::display() {
 AnfScene::~AnfScene() {
 
 }
+
+void AnfScene::createList(Graph::Node* n, string appearencerefID) {
+	if (n->displaylist) {
+		n->list=listNumber;
+		glNewList(listNumber++, GL_COMPILE);
+		drawNode(n, appearencerefID, true);
+		glEndList();
+	} else {
+		if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0)
+			appearencerefID = n->appearencerefID;
+		for (int i = 0; i < (int) n->descendant.size(); ++i) {
+			createList(n->descendant[i], appearencerefID);
+		}
+	}
+}
+

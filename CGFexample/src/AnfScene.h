@@ -11,8 +11,8 @@ public:
 	AnfScene(string file);
 	void init();
 	void display();
-	void drawNode(Graph::Node* n, string appearencerefID);
-
+	void drawNode(Graph::Node* n, string appearencerefID,bool init);
+	void createList(Graph::Node* n,string appearencerefID);
 	Globals globals;
 	Textures textures;
 	Graph graph;
@@ -23,6 +23,7 @@ public:
 	vector<string> camera_id;
 	vector<string> light_id;
 	int initial;
+	int listNumber;
 	~AnfScene();
 };
 
