@@ -365,7 +365,7 @@
 			</transforms>
 			<appearanceref id="inherit" />
 			<primitives>
-				<seagull />
+				<vehicle />
 			</primitives>
 			<descendants>
 			</descendants>
@@ -378,7 +378,7 @@
 			<animationref id="fly"/>
 			<appearanceref id="inherit" />
 			<primitives>
-				<seagull />
+				<vehicle />
 			</primitives>
 			<descendants>
 			</descendants>

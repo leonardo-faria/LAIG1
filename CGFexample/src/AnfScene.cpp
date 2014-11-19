@@ -595,7 +595,7 @@ AnfScene::AnfScene(char* filename) {
 					node.flag.push_back(flag);
 					shaders.push_back(flag.shader);
 				}
-				for (TiXmlElement* p = primitivesElement->FirstChildElement("seagull"); p != NULL; p = p->NextSiblingElement("seagull")) {
+				for (TiXmlElement* p = primitivesElement->FirstChildElement("vehicle"); p != NULL; p = p->NextSiblingElement("vehicle")) {
 					Graph::Node::Seagull s;
 					node.seagull.push_back(s);
 				}
