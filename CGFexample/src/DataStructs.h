@@ -45,43 +45,6 @@ public:
 	bool marker, enabled;
 	CGFlight* cgfl;
 };
-class Animation {
-public:
-	virtual void update(unsigned long t)=0;
-	virtual void apply()=0;
-
-	float time;
-};
-
-class LinearAnimation: public Animation {
-public:
-	vector<vector<float> > dir;
-	vector<float> time;
-	int currentDir;
-	vector<float> pos;
-	float v, t, start;
-
-	void update(unsigned long ti) {
-		if (start == 0)
-			start = ti;
-		unsigned long t = ti - start;
-		for (unsigned int i = 0; i < time.size(); ++i) {
-			if (t < time[i]) {
-				currentDir = i;
-				this->t = t;
-				break;
-			}
-		}
-	}
-	void apply() {
-		float inc = v * (t - time[currentDir]);
-		pos[0] += dir[currentDir][0] * inc;
-		pos[1] += dir[currentDir][1] * inc;
-		pos[2] += dir[currentDir][2] * inc;
-		glTranslatef(pos[0], pos[1], pos[2]);
-	}
-
-};
 
 class Textures {
 public:
@@ -164,8 +127,6 @@ public:
 		vector<Plane> plane;
 		vector<Patch> patch;
 		vector<Node*> descendant;
-				int currentanim;
-				vector<Animation> anim;
 		Node() {
 			list = 0;
 			displaylist = false;

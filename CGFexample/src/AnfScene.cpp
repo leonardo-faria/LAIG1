@@ -337,19 +337,28 @@ AnfScene::AnfScene(string filename) {
 					cp->QueryFloatAttribute("zz", &p[2]);
 					points.push_back(p);
 				}
-//				LinearAnimation la;
-//				la.currentDir = 0;
-//				la.pos = points[0];
-//				la.start = 0;
 
 				vector<float> dist;
-				float tdist=0;
-				for (int i = 0; i < points.size() - 1; ++i) {
-					dist.push_back(sqrt(pow(points[i + 1][0] - points[i][0], 2) + pow(points[i + 1][1] - points[i + 1][1], 2) + pow(points[i + 1][2] - points[i][2], 2)));
-					tdist+=dist[i];
+				vector<vector<float> > dirs;
+				float tdist = 0;
+				for (unsigned int i = 0; i < points.size() - 1; ++i) {
+					dist.push_back(sqrt(pow(points[i + 1][0] - points[i][0], 2) + pow(points[i + 1][1] - points[i][1], 2) + pow(points[i + 1][2] - points[i][2], 2)));
+					tdist += dist[i];
+
+					vector<float> dir;
+					dir.push_back((points[i + 1][0] - points[i][0]) / dist[i]);
+					dir.push_back((points[i + 1][1] - points[i][1]) / dist[i]);
+					dir.push_back((points[i + 1][2] - points[i][2]) / dist[i]);
+
+					dirs.push_back(dir);
 				}
-				cout << "STOP tdist="<< tdist << endl;
-				cin >> tdist;
+				vector<float> times;
+				float d = 0;
+				for (unsigned int i = 0; i < dist.size(); ++i) {
+					d += dist[i];
+					times.push_back((d * time) / tdist);
+					cout << "time " << times[i] << endl;
+				}
 			}
 		}
 	}
