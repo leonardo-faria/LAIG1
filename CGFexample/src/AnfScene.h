@@ -13,6 +13,7 @@ public:
 	void display();
 	void drawNode(Graph::Node* n, string appearencerefID,bool init);
 	void createList(Graph::Node* n,string appearencerefID);
+	void update(unsigned long t);
 	Globals globals;
 	Textures textures;
 	Graph graph;
@@ -24,7 +25,6 @@ public:
 	vector<string> light_id;
 	int initial;
 	int listNumber;
-//	vector<Animation*> anim;
 	~AnfScene();
 };
 

@@ -3,7 +3,9 @@
 #include "CGFapplication.h"
 #include <math.h>
 #include <iostream>
+#include <typeinfo>
 
+map<string, Animation*> anim;
 float pi = acos(-1.0);
 float deg2rad = pi / 180.0;
 
@@ -319,7 +321,6 @@ AnfScene::AnfScene(string filename) {
 	}
 
 	printf("Read appearences\nStarting animations\n");
-
 	if (animationsElement == NULL)
 		printf("Animations block not found!\n");
 	else {
@@ -359,6 +360,14 @@ AnfScene::AnfScene(string filename) {
 					times.push_back((d * time) / tdist);
 					cout << "time " << times[i] << endl;
 				}
+				LinearAnimation* lan = new LinearAnimation();
+				lan->currentDir = 0;
+				lan->dir = dirs;
+				lan->pos = lan->dir[0];
+				lan->start = 0;
+				lan->time = times;
+				lan->v = tdist / (time * 1000.0);
+				anim[id] = lan;
 			}
 		}
 	}
@@ -376,9 +385,15 @@ AnfScene::AnfScene(string filename) {
 		for (TiXmlElement* n = graphElement->FirstChildElement("node"); n != NULL; n = n->NextSiblingElement("node")) {
 
 			Graph::Node node;
+			node.currentAnim=0;
 			char* id = (char*) n->Attribute("id");
 			if (id == 0)
 				continue;
+
+			TiXmlElement* an = n->FirstChildElement("animationref");
+			if (an != NULL) {
+				node.anim=(anim[an->Attribute("id")]);
+			}
 
 			bool displaylist = false;
 			n->QueryBoolAttribute("displaylist", &displaylist);
@@ -548,6 +563,15 @@ AnfScene::AnfScene(string filename) {
 					Graph::Node::Patch patch(order, partsU, partsV, compute, controlpoints);
 					node.patch.push_back(patch);
 				}
+				for (TiXmlElement* p = primitivesElement->FirstChildElement("flag"); p != NULL; p = p->NextSiblingElement("flag")) {
+
+					string text;
+					text = p->Attribute("texture");
+					Graph::Node::Flag flag;
+					flag.text = text;
+					node.flag.push_back(flag);
+				}
+
 			}
 
 			TiXmlElement* descendantsElement = n->FirstChildElement("descendants");
@@ -722,14 +746,19 @@ void drawPlane(int p, GLfloat ctrlpoints[4][3], GLfloat nrmlcompon[4][3], GLfloa
 
 }
 
-void drawPatch(string compute, int order, int partsU, int partsV, vector<GLfloat> controlpoints, vector<GLfloat> textpoints) {
+void drawFlag(string text) {
 
+}
+
+void drawPatch(string compute, int order, int partsU, int partsV, vector<GLfloat> controlpoints, vector<GLfloat> textpoints) {
+	glFrontFace(GL_CW);
 	glEnable(GL_AUTO_NORMAL);
 	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, order + 1, 0.0, 1.0, 3 * (order + 1), order + 1, &controlpoints[0]);
 	glMap2f(GL_MAP2_TEXTURE_COORD_2, 0.0, 1.0, 2, order + 1, 0.0, 1.0, 2 * (order + 1), order + 1, &textpoints[0]);
 
 	glEnable(GL_MAP2_VERTEX_3);
 	glEnable(GL_MAP2_TEXTURE_COORD_2);
+
 	glMapGrid2f(partsU, 0.0, 1.0, partsV, 0.0, 1.0);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_COLOR_MATERIAL);
@@ -743,14 +772,16 @@ void drawPatch(string compute, int order, int partsU, int partsV, vector<GLfloat
 		glEvalMesh2(GL_FILL, 0, partsU, 0, partsV);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_COLOR_MATERIAL);
-
+	glFrontFace(GL_CCW);
 }
 
 void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
 
-//	if (!init) {
-//		n->anim[n->currentanim].apply();
-//	}
+	if (!init) {
+//		cout << "passa"<<endl;
+		if (n->currentAnim != -1)
+			n->anim->apply();
+	}
 
 	if (n->displaylist && !init) {
 		glCallList(n->list);
@@ -846,3 +877,10 @@ void AnfScene::createList(Graph::Node* n, string appearencerefID) {
 	}
 }
 
+void AnfScene::update(unsigned long t) {
+	map<string, Animation*>::iterator it = anim.begin();
+	while (it != anim.end()) {
+		it->second->update(t);
+		it++;
+	}
+}

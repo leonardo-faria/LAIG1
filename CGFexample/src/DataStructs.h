@@ -1,5 +1,7 @@
 #include <vector>
 #include <map>
+#include <iostream>
+#include <math.h>
 #include "CGFapplication.h"
 using namespace std;
 class Globals {
@@ -65,6 +67,58 @@ public:
 	string textureref;
 };
 
+class Animation {
+public:
+	virtual void update(unsigned long t)=0;
+	virtual void apply()=0;
+
+	float time;
+};
+
+class LinearAnimation: public Animation {
+public:
+	vector<vector<float> > dir;
+	vector<float> time;
+	int currentDir;
+	vector<float> pos;
+	float v, t, start;
+
+	void update(unsigned long ti) {
+		if (start == 0)
+			start = ti;
+		unsigned long t = ti - start;
+//		cout << "time " << t << endl;
+		if (t / 1000.0 > time[currentDir])
+			currentDir++;
+		this->t = t;
+		if (currentDir >= time.size())
+			v = 0;
+	}
+	void apply() {
+		if (v == 0)
+			return;
+		float inc = v * (t - time[currentDir]) / 1000.0;
+		pos[0] += dir[currentDir][0] * inc;
+		pos[1] += dir[currentDir][1] * inc;
+		pos[2] += dir[currentDir][2] * inc;
+		float product;
+		if (dir[currentDir][1] != 0) {
+			if (dir[currentDir][2] == 0)
+				product = 1;
+			else if (dir[currentDir][2] < 0)
+				product = -1;
+		} else
+			product = dir[currentDir][2];
+		float angle = acos(product);
+
+		angle = angle * 180.0 / acos(-1);
+		if(dir[currentDir][0]<0)
+			angle*=-1;
+		glTranslatef(pos[0], pos[1], pos[2]);
+		glRotatef(angle, 0, 1, 0);
+	}
+};
+
 class Graph {
 public:
 	class Node {
@@ -115,6 +169,10 @@ public:
 				}
 			}
 		};
+		class Flag {
+		public:
+			string text;
+		};
 		float matrix[16];
 		bool displaylist;
 		int list;
@@ -126,6 +184,10 @@ public:
 		vector<Torus> torus;
 		vector<Plane> plane;
 		vector<Patch> patch;
+		vector<Flag> flag;
+
+		int currentAnim;
+		Animation* anim;
 		vector<Node*> descendant;
 		Node() {
 			list = 0;
@@ -171,17 +233,3 @@ public:
 
 };
 
-//virtual class Animation {
-//public:
-//	int time;
-//};
-//
-//class LinearAnimation: public Animation {
-//public:
-//	vector<int[3]> cpoints;
-//};
-//
-//class CircularAnimation: public Animation {
-//public:
-//
-//};
