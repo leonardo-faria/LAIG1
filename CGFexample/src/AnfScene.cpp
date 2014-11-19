@@ -6,6 +6,7 @@
 #include <typeinfo>
 
 map<string, Animation*> anim;
+
 float pi = acos(-1.0);
 float deg2rad = pi / 180.0;
 
@@ -353,6 +354,7 @@ AnfScene::AnfScene(string filename) {
 
 					dirs.push_back(dir);
 				}
+
 				vector<float> times;
 				float d = 0;
 				for (unsigned int i = 0; i < dist.size(); ++i) {
@@ -363,11 +365,29 @@ AnfScene::AnfScene(string filename) {
 				LinearAnimation* lan = new LinearAnimation();
 				lan->currentDir = 0;
 				lan->dir = dirs;
-				lan->pos = lan->dir[0];
+				lan->pos = points[0];
 				lan->start = 0;
 				lan->time = times;
-				lan->v = tdist / (time * 1000.0);
+				lan->v = tdist / time;
 				anim[id] = lan;
+			} else {
+				float sang, da,r;
+				a->QueryFloatAttribute("startang", &sang);
+				a->QueryFloatAttribute("rotang", &da);
+				a->QueryFloatAttribute("radius", &r);
+
+				vector<float> c(3);
+				sscanf(a->Attribute("center"), "%f %f %f", &c[0], &c[1], &c[2]);
+
+				CircularAnimation* ca = new CircularAnimation;
+				cout << da << ":" << time << endl;
+				ca->sang = sang;
+				ca->start=0;
+				ca->time=time;
+				ca->vang=da/time;
+				ca->center=c;
+				ca->r=r;
+				anim[id]=ca;
 			}
 		}
 	}
@@ -385,14 +405,13 @@ AnfScene::AnfScene(string filename) {
 		for (TiXmlElement* n = graphElement->FirstChildElement("node"); n != NULL; n = n->NextSiblingElement("node")) {
 
 			Graph::Node node;
-			node.currentAnim=0;
+			node.currentAnim = 0;
 			char* id = (char*) n->Attribute("id");
 			if (id == 0)
 				continue;
 
-			TiXmlElement* an = n->FirstChildElement("animationref");
-			if (an != NULL) {
-				node.anim=(anim[an->Attribute("id")]);
+			for (TiXmlElement* an = n->FirstChildElement("animationref"); an != NULL; an = an->NextSiblingElement("animationref")) {
+				node.anim.push_back(anim[an->Attribute("id")]);
 			}
 
 			bool displaylist = false;
@@ -632,7 +651,7 @@ void AnfScene::init() {
 	glClearColor(globals.drawing.background[0], globals.drawing.background[1], globals.drawing.background[2], globals.drawing.background[3]);
 	glNormal3f(0, 0, 1);
 
-	setUpdatePeriod(100);
+	setUpdatePeriod(20);
 
 	createList(&graph.nodes[graph.rootid], "");
 }
@@ -779,8 +798,9 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
 
 	if (!init) {
 //		cout << "passa"<<endl;
-		if (n->currentAnim != -1)
-			n->anim->apply();
+		if (n->currentAnim < n->anim.size()) {
+			n->anim[n->currentAnim]->apply();
+		}
 	}
 
 	if (n->displaylist && !init) {
@@ -878,9 +898,11 @@ void AnfScene::createList(Graph::Node* n, string appearencerefID) {
 }
 
 void AnfScene::update(unsigned long t) {
-	map<string, Animation*>::iterator it = anim.begin();
-	while (it != anim.end()) {
-		it->second->update(t);
+	map<string, Graph::Node>::iterator it = graph.nodes.begin();
+	while (it != graph.nodes.end()) {
+		if (it->second.currentAnim < it->second.anim.size())
+			if (it->second.anim[it->second.currentAnim]->update(t))
+				it->second.currentAnim += 1;
 		it++;
 	}
 }

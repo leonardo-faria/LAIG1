@@ -69,7 +69,7 @@ public:
 
 class Animation {
 public:
-	virtual void update(unsigned long t)=0;
+	virtual bool update(unsigned long t)=0;
 	virtual void apply()=0;
 
 	float time;
@@ -83,24 +83,31 @@ public:
 	vector<float> pos;
 	float v, t, start;
 
-	void update(unsigned long ti) {
+	bool update(unsigned long ti) {
 		if (start == 0)
 			start = ti;
 		unsigned long t = ti - start;
-//		cout << "time " << t << endl;
-		if (t / 1000.0 > time[currentDir])
+		if (t / 1000.0 > time[currentDir]) {
+			if (currentDir < dir.size()) {
+				pos[0] = dir[currentDir][0];
+				pos[1] = dir[currentDir][1];
+				pos[2] = dir[currentDir][2];
+			}
 			currentDir++;
+		}
 		this->t = t;
 		if (currentDir >= time.size())
-			v = 0;
+			return true;
+		return false;
 	}
 	void apply() {
 		if (v == 0)
 			return;
-		float inc = v * (t - time[currentDir]) / 1000.0;
-		pos[0] += dir[currentDir][0] * inc;
-		pos[1] += dir[currentDir][1] * inc;
-		pos[2] += dir[currentDir][2] * inc;
+		float inc;
+		if (currentDir - 1 < 0)
+			inc = v * (t / 1000.0 - 0);
+		else
+			inc = v * (t / 1000.0 - time[currentDir - 1]);
 		float product;
 		if (dir[currentDir][1] != 0) {
 			if (dir[currentDir][2] == 0)
@@ -112,10 +119,31 @@ public:
 		float angle = acos(product);
 
 		angle = angle * 180.0 / acos(-1);
-		if(dir[currentDir][0]<0)
-			angle*=-1;
-		glTranslatef(pos[0], pos[1], pos[2]);
+		if (dir[currentDir][0] < 0)
+			angle *= -1;
+		glTranslatef(pos[0] + dir[currentDir][0] * inc, pos[1] + dir[currentDir][1] * inc, pos[2] + dir[currentDir][2] * inc);
 		glRotatef(angle, 0, 1, 0);
+	}
+};
+
+class CircularAnimation: public Animation {
+public:
+	vector<float> center;
+	float sang, t, start, vang,r;
+	bool update(unsigned long ti) {
+		if (start == 0)
+			start = ti;
+		unsigned long t = ti - start;
+		this->t = t;
+		if (t / 1000.0 > time)
+			return true;
+		return false;
+	}
+	void apply() {
+		glTranslatef(center[0], center[1], center[2]);
+		glRotatef(sang + vang * (t / 1000.0), 0, 1, 0);
+		glTranslatef(-center[0]+r, -center[1], -center[2]);
+
 	}
 };
 
@@ -187,7 +215,7 @@ public:
 		vector<Flag> flag;
 
 		int currentAnim;
-		Animation* anim;
+		vector<Animation*> anim;
 		vector<Node*> descendant;
 		Node() {
 			list = 0;
@@ -232,4 +260,3 @@ public:
 	}
 
 };
-
