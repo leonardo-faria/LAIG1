@@ -8,16 +8,19 @@
 #include "DataStructs.h"
 class AnfScene: public CGFscene {
 public:
-	AnfScene(string file);
+	AnfScene(char* file);
 	void init();
 	void display();
-	void drawNode(Graph::Node* n, string appearencerefID,bool init);
-	void createList(Graph::Node* n,string appearencerefID);
+	void drawNode(Graph::Node* n, string appearencerefID, bool init);
+	void createList(Graph::Node* n, string appearencerefID);
 	void update(unsigned long t);
 	Globals globals;
 	Textures textures;
 	Graph graph;
-
+	void drawFlag(Graph::Node::Flag* f);
+	map<string, Animation*> anim;
+	vector<FlagShadder*> shaders;
+	int velocity;
 	map<string, Appearence> appearances;
 	vector<Light> lights;
 	map<string, Camera*> cameras;

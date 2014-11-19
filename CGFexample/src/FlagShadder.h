@@ -11,20 +11,22 @@
 
 class FlagShadder: public CGFshader {
 public:
-	virtual void bind();
+	virtual void bind(float v);
 	virtual void unbind();
 
 	void update(unsigned long t);
 
-	FlagShadder();
+	FlagShadder(string t);
 	virtual ~FlagShadder();
 	float angle;
 	unsigned long startTime;
 	float time;
 	int angleLoc;
 	int timeLoc;
+	int vLoc;
 	int baseTextLoc;
 	CGFtexture* text;
+	string t;
 };
 
 #endif /* FLAG_H_ */

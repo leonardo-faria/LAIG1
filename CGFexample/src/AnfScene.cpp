@@ -5,15 +5,14 @@
 #include <iostream>
 #include <typeinfo>
 
-map<string, Animation*> anim;
-vector<FlagShadder*> shaders;
 float pi = acos(-1.0);
 float deg2rad = pi / 180.0;
 
 #define BOARD_HEIGHT 6.0
-#define BOAsRD_WIDTH 6.4
+#define BOARD_WIDTH 6.4
 
-AnfScene::AnfScene(string filename) {
+AnfScene::AnfScene(char* filename) {
+	velocity = 2;
 	listNumber = 1;
 	TiXmlElement* globalsElement;
 	TiXmlElement* camerasElement;
@@ -23,10 +22,10 @@ AnfScene::AnfScene(string filename) {
 	TiXmlElement* graphElement;
 	TiXmlElement* animationsElement;
 
-	TiXmlDocument *doc = new TiXmlDocument(filename.c_str());
+	TiXmlDocument *doc = new TiXmlDocument(filename);
 
 	if (!doc->LoadFile()) {
-		printf("Could not load file '%s'. Error='%s'. Exiting.\n", filename.c_str(), doc->ErrorDesc());
+		printf("Could not load file '%s'. Error='%s'. Exiting.\n", filename, doc->ErrorDesc());
 		exit(1);
 	}
 
@@ -315,7 +314,9 @@ AnfScene::AnfScene(string filename) {
 			app.appearence = ap;
 			if (textureref != NULL && textures.texture[textureref].file != "") {
 				app.textureref = textureref;
+				cout << "try" << endl;
 				ap->setTexture(textures.texture[textureref].file);
+				cout << "pass" << endl;
 			}
 			appearances[id] = app;
 		}
@@ -413,6 +414,7 @@ AnfScene::AnfScene(string filename) {
 			for (TiXmlElement* an = n->FirstChildElement("animationref"); an != NULL; an = an->NextSiblingElement("animationref")) {
 				node.anim.push_back(anim[an->Attribute("id")]);
 			}
+
 			bool displaylist = false;
 			n->QueryBoolAttribute("displaylist", &displaylist);
 			node.displaylist = displaylist;
@@ -585,11 +587,18 @@ AnfScene::AnfScene(string filename) {
 					string text;
 					text = p->Attribute("texture");
 					Graph::Node::Flag flag;
-					flag = Graph::Node::Flag();
+
+					flag.plane = new Graph::Node::Plane(100);
+
+					flag.text = text;
+					flag.shader = new FlagShadder(text);
 					node.flag.push_back(flag);
 					shaders.push_back(flag.shader);
 				}
-
+				for (TiXmlElement* p = primitivesElement->FirstChildElement("seagull"); p != NULL; p = p->NextSiblingElement("seagull")) {
+					Graph::Node::Seagull s;
+					node.seagull.push_back(s);
+				}
 			}
 
 			TiXmlElement* descendantsElement = n->FirstChildElement("descendants");
@@ -753,17 +762,14 @@ void drawPlane(int p) {
 	glEnable(GL_MAP2_VERTEX_3);
 	glEnable(GL_MAP2_NORMAL);
 	glEnable(GL_MAP2_TEXTURE_COORD_2);
-
 	glMapGrid2f(p, 0.0, 1.0, p, 0.0, 1.0);
 	glEvalMesh2(GL_FILL, 0, p, 0, p);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_COLOR_MATERIAL);
 
 }
 
-void drawFlag(Graph::Node::Flag* f) {
+void AnfScene::drawFlag(Graph::Node::Flag* f) {
 
-	f->shader->bind();
+	f->shader->bind(velocity);
 	drawPlane(100);
 	f->shader->unbind();
 
@@ -794,20 +800,256 @@ void drawPatch(string compute, int order, int partsU, int partsV, vector<GLfloat
 	glFrontFace(GL_CCW);
 }
 
+void drawSeagull() {
+//	cout << "seagull" << endl;
+	vector<float> aux(3);
+	glScalef(0.3, 0.3, 0.3);
+	//body
+	while (1) {
+		glPushMatrix();
+
+		//bodyleft
+		glPushMatrix();
+		glRotatef(90, 0, 1, 0);
+		drawCylinder(0.5, 0.05, 3, 200, 100);
+		glPopMatrix();
+
+		//bodyright
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawCylinder(0.5, 0.05, 3, 200, 100);
+		glPopMatrix();
+
+		glPopMatrix();
+		break;
+	}
+//	cout << "draw body" << endl;
+	//wing1
+	while (1) {
+		glPushMatrix();
+
+		glTranslatef(0, 0, -1.2);
+		glRotatef(-90, 0, 1, 0);
+
+		//wingmain
+		glPushMatrix();
+		glRotatef(90, 0, 1, 0);
+		glRotatef(90, 1, 0, 0);
+		drawRectangle(-0.5, -1.0, 0.5, 1.0);
+		drawRectangle(-0.5, 1.0, 0.5, -1.0);
+		glPopMatrix();
+
+		//wingTip1
+		glPushMatrix();
+		vector<vector<float> > tip1(3);
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = 0.5;
+		tip1[0] = aux;
+		aux[0] = -3;
+		aux[1] = -1;
+		aux[2] = 0;
+		tip1[1] = aux;
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = -0.5;
+		tip1[2] = aux;
+		drawTriangle(tip1[0], tip1[1], tip1[2]);
+
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = -0.5;
+		tip1[0] = aux;
+		aux[0] = -3;
+		aux[1] = -1;
+		aux[2] = 0;
+		tip1[1] = aux;
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = 0.5;
+		tip1[2] = aux;
+		drawTriangle(tip1[0], tip1[1], tip1[2]);
+
+		glPopMatrix();
+
+		glPopMatrix();
+		break;
+	}
+//	cout << "draw wing1" << endl;
+//wing2
+	while (1) {
+		glPushMatrix();
+		glTranslatef(0, 0, 1.2);
+		glRotatef(90, 0, 1, 0);
+
+		//wingmain
+		glPushMatrix();
+		glRotatef(90, 0, 1, 0);
+		glRotatef(90, 1, 0, 0);
+		drawRectangle(-0.5, -1.0, 0.5, 1.0);
+		drawRectangle(-0.5, 1.0, 0.5, -1.0);
+		glPopMatrix();
+
+		//wingTip1
+		glPushMatrix();
+		vector<vector<float> > tip1(3);
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = 0.5;
+		tip1[0] = aux;
+		aux[0] = -3;
+		aux[1] = -1;
+		aux[2] = 0;
+		tip1[1] = aux;
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = -0.5;
+		tip1[2] = aux;
+		drawTriangle(tip1[0], tip1[1], tip1[2]);
+
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = -0.5;
+		tip1[0] = aux;
+		aux[0] = -3;
+		aux[1] = -1;
+		aux[2] = 0;
+		tip1[1] = aux;
+		aux[0] = -1;
+		aux[1] = 0;
+		aux[2] = 0.5;
+		tip1[2] = aux;
+		drawTriangle(tip1[0], tip1[1], tip1[2]);
+
+		glPopMatrix();
+
+		glPopMatrix();
+		break;
+	}
+//	cout << "draw wing2" << endl;
+//head
+	while (1) {
+		glPushMatrix();
+
+		glTranslatef(2.8, 0, 0);
+
+//justHead
+		glPushMatrix();
+		drawSphere(0.5, 200, 100);
+		glPopMatrix();
+
+//beak
+		glPushMatrix();
+		glRotatef(90, 0, 1, 0);
+		glTranslatef(0, 0, 0.35);
+		glRotatef(180, 0, 1, 0);
+		vector<float> cp;
+
+		cp.push_back(-0.25);
+		cp.push_back(-0.25);
+		cp.push_back(0);
+
+		cp.push_back(-0.25);
+		cp.push_back(0);
+		cp.push_back(0);
+
+		cp.push_back(-0.25);
+		cp.push_back(0.25);
+		cp.push_back(0);
+
+		cp.push_back(0);
+		cp.push_back(-0.25);
+		cp.push_back(0);
+
+		cp.push_back(0);
+		cp.push_back(0);
+		cp.push_back(-5);
+
+		cp.push_back(0);
+		cp.push_back(0.25);
+		cp.push_back(0);
+
+		cp.push_back(0.25);
+		cp.push_back(-0.25);
+		cp.push_back(0);
+
+		cp.push_back(0.25);
+		cp.push_back(0);
+		cp.push_back(0);
+
+		cp.push_back(0.25);
+		cp.push_back(0.25);
+		cp.push_back(0);
+
+		Graph::Node::Patch p(2, 10, 10, "fill", cp);
+
+		drawPatch("fill", 2, 10, 10, cp, p.textpoints);
+		glPopMatrix();
+
+		glPopMatrix();
+		break;
+	}
+//	cout << "draw head" << endl;
+//tail
+	while (1) {
+		glPushMatrix();
+
+		glTranslatef(-3, 0, 0);
+		glRotatef(90, 0, 1, 0);
+		glRotatef(90, 1, 0, 0);
+
+		vector<vector<float> > v1;
+		vector<vector<float> > v2;
+
+		aux[0] = -1.5;
+		aux[1] = -1.3;
+		aux[2] = 0;
+		v1.push_back(aux);
+		aux[0] = -0;
+		aux[1] = 1.3;
+		aux[2] = 0;
+		v1.push_back(aux);
+		aux[0] = 1.5;
+		aux[1] = -1.3;
+		aux[2] = 0;
+		v1.push_back(aux);
+
+		aux[0] = 1.5;
+		aux[1] = -1.3;
+		aux[2] = 0;
+		v2.push_back(aux);
+		aux[0] = -0;
+		aux[1] = 1.3;
+		aux[2] = 0;
+		v2.push_back(aux);
+		aux[0] = -1.5;
+		aux[1] = -1.3;
+		aux[2] = 0;
+		v2.push_back(aux);
+
+		drawTriangle(v1[0], v1[1], v1[2]);
+		drawTriangle(v2[0], v2[1], v2[2]);
+
+		glPopMatrix();
+		break;
+	}
+//	cout << "draw tail" << endl;
+}
+
 void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
+
 	glPushMatrix();
 	if (!init) {
-//		cout << "passa"<<endl;
 		if (n->currentAnim < n->anim.size()) {
 			n->anim[n->currentAnim]->apply();
 		}
 	}
 
+	glPushMatrix();
 	if (n->displaylist && !init) {
 		glCallList(n->list);
 		return;
 	}
-
 	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0) {
 		appearances[n->appearencerefID].appearence->apply();
 		appearencerefID = n->appearencerefID;
@@ -842,9 +1084,13 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
 	for (unsigned int i = 0; i < n->flag.size(); ++i) {
 		drawFlag(&n->flag[i]);
 	}
+	for (int i = 0; i < n->seagull.size(); ++i) {
+		drawSeagull();
+	}
 	for (unsigned int i = 0; i < n->descendant.size(); ++i) {
 		drawNode(n->descendant[i], appearencerefID, init);
 	}
+	glPopMatrix();
 	glPopMatrix();
 }
 

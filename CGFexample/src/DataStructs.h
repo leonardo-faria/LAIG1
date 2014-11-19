@@ -116,7 +116,7 @@ public:
 		} else
 			product = dir[currentDir][2];
 		float angle = acos(product);
-
+		cout <<pos[currentDir][0] + dir[currentDir][0] * inc<<"\t"<< pos[currentDir][1] + dir[currentDir][1] * inc <<"\t"<< pos[currentDir][2] + dir[currentDir][2] * inc << endl;
 		angle = angle * 180.0 / acos(-1);
 		if (dir[currentDir][0] < 0)
 			angle *= -1;
@@ -142,6 +142,7 @@ public:
 		glTranslatef(center[0], center[1], center[2]);
 		glRotatef(sang + vang * (t / 1000.0), 0, 1, 0);
 		glTranslatef(r, 0, 0);
+		glRotatef(90,0,1,0);
 	}
 };
 
@@ -203,10 +204,14 @@ public:
 			FlagShadder* shader;
 			Plane* plane;
 			string text;
-			Flag() {
-				plane = new Plane(100);
-				shader = new FlagShadder();
-			}
+//			Flag() {
+//				plane = new Plane(100);
+//				shader = new FlagShadder;
+//				shader->t=text;
+//			}
+		};
+		class Seagull {
+
 		};
 		float matrix[16];
 		bool displaylist;
@@ -220,6 +225,7 @@ public:
 		vector<Plane> plane;
 		vector<Patch> patch;
 		vector<Flag> flag;
+		vector<Seagull> seagull;
 
 		int currentAnim;
 		vector<Animation*> anim;

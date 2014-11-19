@@ -9,9 +9,11 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include "FlagShadder.h"
+#include "iostream"
 
-FlagShadder::FlagShadder() {
-	text = new CGFtexture("seaText.jpg");
+FlagShadder::FlagShadder(string t) {
+	cout << "Texture " << t << endl;
+	text = new CGFtexture(t);
 	init("flag.vert", "flag.frag");
 	CGFshader::bind();
 
@@ -21,6 +23,7 @@ FlagShadder::FlagShadder() {
 	angle = 0.0;
 
 	angleLoc = glGetUniformLocation(id(), "angle");
+	vLoc = glGetUniformLocation(id(), "v");
 
 	baseTextLoc = glGetUniformLocation(id(), "baseTexture");
 
@@ -33,14 +36,14 @@ FlagShadder::~FlagShadder() {
 
 }
 
-void FlagShadder::bind() {
+void FlagShadder::bind(float v) {
 	CGFshader::bind();
-
 	// update uniforms
 	glUniform1f(angleLoc, angle);
 	glUniform1f(timeLoc, time);
+	glUniform1f(vLoc, v);
 	// make sure the correct texture unit is active
-	glActiveTexture (GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 
 	// apply/activate the texture you want, so that it is bound to GL_TEXTURE0
 	text->apply();
