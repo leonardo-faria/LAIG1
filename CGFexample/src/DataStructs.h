@@ -2,6 +2,7 @@
 #include <map>
 #include <iostream>
 #include <math.h>
+#include "FlagShadder.h"
 #include "CGFapplication.h"
 using namespace std;
 class Globals {
@@ -80,7 +81,7 @@ public:
 	vector<vector<float> > dir;
 	vector<float> time;
 	int currentDir;
-	vector<float> pos;
+	vector<vector<float> > pos;
 	float v, t, start;
 
 	bool update(unsigned long ti) {
@@ -89,9 +90,7 @@ public:
 		unsigned long t = ti - start;
 		if (t / 1000.0 > time[currentDir]) {
 			if (currentDir < dir.size()) {
-				pos[0] = dir[currentDir][0];
-				pos[1] = dir[currentDir][1];
-				pos[2] = dir[currentDir][2];
+				cout << "CHANGE" << endl;
 			}
 			currentDir++;
 		}
@@ -121,7 +120,7 @@ public:
 		angle = angle * 180.0 / acos(-1);
 		if (dir[currentDir][0] < 0)
 			angle *= -1;
-		glTranslatef(pos[0] + dir[currentDir][0] * inc, pos[1] + dir[currentDir][1] * inc, pos[2] + dir[currentDir][2] * inc);
+		glTranslatef(pos[currentDir][0] + dir[currentDir][0] * inc, pos[currentDir][1] + dir[currentDir][1] * inc, pos[currentDir][2] + dir[currentDir][2] * inc);
 		glRotatef(angle, 0, 1, 0);
 	}
 };
@@ -129,7 +128,7 @@ public:
 class CircularAnimation: public Animation {
 public:
 	vector<float> center;
-	float sang, t, start, vang,r;
+	float sang, t, start, vang, r;
 	bool update(unsigned long ti) {
 		if (start == 0)
 			start = ti;
@@ -142,8 +141,7 @@ public:
 	void apply() {
 		glTranslatef(center[0], center[1], center[2]);
 		glRotatef(sang + vang * (t / 1000.0), 0, 1, 0);
-		glTranslatef(-center[0]+r, -center[1], -center[2]);
-
+		glTranslatef(r, 0, 0);
 	}
 };
 
@@ -176,6 +174,9 @@ public:
 		};
 		class Plane {
 		public:
+			Plane(int p) {
+				parts = p;
+			}
 			int parts;
 		};
 		class Patch {
@@ -199,7 +200,13 @@ public:
 		};
 		class Flag {
 		public:
+			FlagShadder* shader;
+			Plane* plane;
 			string text;
+			Flag() {
+				plane = new Plane(100);
+				shader = new FlagShadder();
+			}
 		};
 		float matrix[16];
 		bool displaylist;

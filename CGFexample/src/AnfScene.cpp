@@ -6,7 +6,7 @@
 #include <typeinfo>
 
 map<string, Animation*> anim;
-
+vector<FlagShadder*> shaders;
 float pi = acos(-1.0);
 float deg2rad = pi / 180.0;
 
@@ -351,7 +351,7 @@ AnfScene::AnfScene(string filename) {
 					dir.push_back((points[i + 1][0] - points[i][0]) / dist[i]);
 					dir.push_back((points[i + 1][1] - points[i][1]) / dist[i]);
 					dir.push_back((points[i + 1][2] - points[i][2]) / dist[i]);
-
+					cout << "dir " << dir[0] << dir[1] << dir[2] << endl;
 					dirs.push_back(dir);
 				}
 
@@ -365,13 +365,13 @@ AnfScene::AnfScene(string filename) {
 				LinearAnimation* lan = new LinearAnimation();
 				lan->currentDir = 0;
 				lan->dir = dirs;
-				lan->pos = points[0];
+				lan->pos = points;
 				lan->start = 0;
 				lan->time = times;
 				lan->v = tdist / time;
 				anim[id] = lan;
 			} else {
-				float sang, da,r;
+				float sang, da, r;
 				a->QueryFloatAttribute("startang", &sang);
 				a->QueryFloatAttribute("rotang", &da);
 				a->QueryFloatAttribute("radius", &r);
@@ -382,12 +382,12 @@ AnfScene::AnfScene(string filename) {
 				CircularAnimation* ca = new CircularAnimation;
 				cout << da << ":" << time << endl;
 				ca->sang = sang;
-				ca->start=0;
-				ca->time=time;
-				ca->vang=da/time;
-				ca->center=c;
-				ca->r=r;
-				anim[id]=ca;
+				ca->start = 0;
+				ca->time = time;
+				ca->vang = da / time;
+				ca->center = c;
+				ca->r = r;
+				anim[id] = ca;
 			}
 		}
 	}
@@ -413,7 +413,6 @@ AnfScene::AnfScene(string filename) {
 			for (TiXmlElement* an = n->FirstChildElement("animationref"); an != NULL; an = an->NextSiblingElement("animationref")) {
 				node.anim.push_back(anim[an->Attribute("id")]);
 			}
-
 			bool displaylist = false;
 			n->QueryBoolAttribute("displaylist", &displaylist);
 			node.displaylist = displaylist;
@@ -553,8 +552,7 @@ AnfScene::AnfScene(string filename) {
 					float parts;
 					if (p->QueryFloatAttribute("parts", &parts) != TIXML_SUCCESS)
 						continue;
-					Graph::Node::Plane plane;
-					plane.parts = parts;
+					Graph::Node::Plane plane(parts);
 					node.plane.push_back(plane);
 				}
 				for (TiXmlElement* p = primitivesElement->FirstChildElement("patch"); p != NULL; p = p->NextSiblingElement("patch")) {
@@ -587,8 +585,9 @@ AnfScene::AnfScene(string filename) {
 					string text;
 					text = p->Attribute("texture");
 					Graph::Node::Flag flag;
-					flag.text = text;
+					flag = Graph::Node::Flag();
 					node.flag.push_back(flag);
+					shaders.push_back(flag.shader);
 				}
 
 			}
@@ -740,32 +739,33 @@ void drawTorus(float inner, float outer, int slices, int rings) {
 		glEnd();
 	}
 }
-void drawPlane(int p, GLfloat ctrlpoints[4][3], GLfloat nrmlcompon[4][3], GLfloat textpoints[4][2]) {
+void drawPlane(int p) {
 
-	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 1, 0.0, 1.0, 6, 1, &ctrlpoints[0][0]);
-	glMap2f(GL_MAP2_NORMAL, 0.0, 1.0, 3, 1, 0.0, 1.0, 6, 1, &nrmlcompon[0][0]);
-	glMap2f(GL_MAP2_TEXTURE_COORD_2, 0.0, 1.0, 2, 1, 0.0, 1.0, 4, 1, &textpoints[0][0]);
+	GLfloat ctrlpoints[4][3] = { { -0.5, 0.0, -0.5 }, { 0.5, 0.0, -0.5 }, { -0.5, 0.0, 0.5 }, { 0.5, 0.0, 0.5 } };
+
+	GLfloat nrmlcompon[4][3] = { { 0.0, 1.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 1.0, 0.0 } };
+
+	GLfloat textpoints[4][2] = { { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 } };
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 2, 0.0, 1.0, 6, 2, &ctrlpoints[0][0]);
+	glMap2f(GL_MAP2_NORMAL, 0.0, 1.0, 3, 2, 0.0, 1.0, 6, 2, &nrmlcompon[0][0]);
+	glMap2f(GL_MAP2_TEXTURE_COORD_2, 0.0, 1.0, 2, 2, 0.0, 1.0, 4, 2, &textpoints[0][0]);
+
 	glEnable(GL_MAP2_VERTEX_3);
 	glEnable(GL_MAP2_NORMAL);
 	glEnable(GL_MAP2_TEXTURE_COORD_2);
+
 	glMapGrid2f(p, 0.0, 1.0, p, 0.0, 1.0);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_COLOR_MATERIAL);
-	glEnable(GL_TEXTURE_2D);
-
 	glEvalMesh2(GL_FILL, 0, p, 0, p);
-
-	glColor3f(1.0, 1.0, 0.0);
-	for (int i = 0; i < 4; i++) {
-		glRasterPos3f(ctrlpoints[i][0], ctrlpoints[i][1], ctrlpoints[i][2] + 0.5);
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, '0' + i);
-	}
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_COLOR_MATERIAL);
 
 }
 
-void drawFlag(string text) {
+void drawFlag(Graph::Node::Flag* f) {
+
+	f->shader->bind();
+	drawPlane(100);
+	f->shader->unbind();
 
 }
 
@@ -795,7 +795,7 @@ void drawPatch(string compute, int order, int partsU, int partsV, vector<GLfloat
 }
 
 void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
-
+	glPushMatrix();
 	if (!init) {
 //		cout << "passa"<<endl;
 		if (n->currentAnim < n->anim.size()) {
@@ -807,7 +807,7 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
 		glCallList(n->list);
 		return;
 	}
-	glPushMatrix();
+
 	if (n->appearencerefID != "inherit" && n->appearencerefID.size() > 0) {
 		appearances[n->appearencerefID].appearence->apply();
 		appearencerefID = n->appearencerefID;
@@ -830,16 +830,17 @@ void AnfScene::drawNode(Graph::Node* n, string appearencerefID, bool init) {
 	for (unsigned int i = 0; i < n->sphere.size(); ++i) {
 		drawSphere(n->sphere[i].radius, n->sphere[i].slices, n->sphere[i].stacks);
 	}
-
 	for (unsigned int i = 0; i < n->plane.size(); ++i) {
 		GLfloat ctrlpoints[4][3] = { { -0.5, -0.5, 0.0 }, { -0.5, 0.5, 0.0 }, { 0.5, -0.5, 0.0 }, { 0.5, 0.5, 0.0 } };
 		GLfloat nrmlcompon[4][3] = { { 0.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 } };
 		GLfloat textpoints[4][2] = { { 0.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 0.0 }, { 1.0, 1.0 } };
-		drawPlane(n->plane[i].parts, ctrlpoints, nrmlcompon, textpoints);
+		drawPlane(n->plane[i].parts);
 	}
-
 	for (unsigned int i = 0; i < n->patch.size(); ++i) {
 		drawPatch(n->patch[i].compute, n->patch[i].order, n->patch[i].partsU, n->patch[i].partsV, n->patch[i].controlpoints, n->patch[i].textpoints);
+	}
+	for (unsigned int i = 0; i < n->flag.size(); ++i) {
+		drawFlag(&n->flag[i]);
 	}
 	for (unsigned int i = 0; i < n->descendant.size(); ++i) {
 		drawNode(n->descendant[i], appearencerefID, init);
@@ -883,10 +884,12 @@ AnfScene::~AnfScene() {
 }
 
 void AnfScene::createList(Graph::Node* n, string appearencerefID) {
+
 	if (n->displaylist) {
 		cout << "List with number: " << listNumber << endl;
 		n->list = listNumber;
-		glNewList(listNumber++, GL_COMPILE);
+		glNewList(listNumber, GL_COMPILE);
+		listNumber++;
 		drawNode(n, appearencerefID, true);
 		glEndList();
 	} else {
@@ -896,9 +899,13 @@ void AnfScene::createList(Graph::Node* n, string appearencerefID) {
 			createList(n->descendant[i], appearencerefID);
 		}
 	}
+
 }
 
 void AnfScene::update(unsigned long t) {
+	for (int i = 0; i < shaders.size(); ++i) {
+		shaders[i]->update(t);
+	}
 	map<string, Graph::Node>::iterator it = graph.nodes.begin();
 	while (it != graph.nodes.end()) {
 		if (it->second.currentAnim < it->second.anim.size())
