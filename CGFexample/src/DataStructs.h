@@ -45,6 +45,43 @@ public:
 	bool marker, enabled;
 	CGFlight* cgfl;
 };
+class Animation {
+public:
+	virtual void update(unsigned long t)=0;
+	virtual void apply()=0;
+
+	float time;
+};
+
+class LinearAnimation: public Animation {
+public:
+	vector<vector<float> > dir;
+	vector<float> time;
+	int currentDir;
+	vector<float> pos;
+	float v, t, start;
+
+	void update(unsigned long ti) {
+		if (start == 0)
+			start = ti;
+		unsigned long t = ti - start;
+		for (unsigned int i = 0; i < time.size(); ++i) {
+			if (t < time[i]) {
+				currentDir = i;
+				this->t = t;
+				break;
+			}
+		}
+	}
+	void apply() {
+		float inc = v * (t - time[currentDir]);
+		pos[0] += dir[currentDir][0] * inc;
+		pos[1] += dir[currentDir][1] * inc;
+		pos[2] += dir[currentDir][2] * inc;
+		glTranslatef(pos[0], pos[1], pos[2]);
+	}
+
+};
 
 class Textures {
 public:
@@ -92,6 +129,29 @@ public:
 			float inner, outer;
 			int slices, loops;
 		};
+		class Plane {
+		public:
+			int parts;
+		};
+		class Patch {
+		public:
+			int order, partsU, partsV;
+			string compute;
+			vector<GLfloat> controlpoints, textpoints;
+			Patch(int order, int partsU, int partsV, string compute, vector<GLfloat> controlpoints) {
+				this->compute = compute;
+				this->order = order;
+				this->partsU = partsU;
+				this->partsV = partsV;
+				this->controlpoints = controlpoints;
+				for (int i = 0; i < order + 1; i++) {
+					for (int j = 0; j < order + 1; j++) {
+						textpoints.push_back((float) i / (float) order);
+						textpoints.push_back((float) j / (float) order);
+					}
+				}
+			}
+		};
 		float matrix[16];
 		bool displaylist;
 		int list;
@@ -101,7 +161,11 @@ public:
 		vector<Cylinder> cylinder;
 		vector<Sphere> sphere;
 		vector<Torus> torus;
+		vector<Plane> plane;
+		vector<Patch> patch;
 		vector<Node*> descendant;
+				int currentanim;
+				vector<Animation> anim;
 		Node() {
 			list = 0;
 			displaylist = false;
@@ -122,13 +186,11 @@ class CPerspective: public Camera {
 public:
 	float near, far, angle, pos[3], target[3];
 	void apply() {
-		float ratio = ((float) CGFapplication::width)
-				/ ((float) CGFapplication::height);
+		float ratio = ((float) CGFapplication::width) / ((float) CGFapplication::height);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(angle, ratio, near, far);
-		gluLookAt(pos[0], pos[1], pos[2], target[0], target[1], target[2], 0, 1,
-				0);
+		gluLookAt(pos[0], pos[1], pos[2], target[0], target[1], target[2], 0, 1, 0);
 	}
 };
 class COrtho: public Camera {
@@ -136,8 +198,7 @@ public:
 	string direction;
 	float near, far, left, right, top, bottom;
 	void apply() {
-		float ratio = ((float) CGFapplication::width)
-				/ ((float) CGFapplication::height);
+		float ratio = ((float) CGFapplication::width) / ((float) CGFapplication::height);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(left * ratio, right * ratio, bottom, top, near, far);

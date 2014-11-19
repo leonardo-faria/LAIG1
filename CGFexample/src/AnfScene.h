@@ -24,6 +24,7 @@ public:
 	vector<string> light_id;
 	int initial;
 	int listNumber;
+	vector<Animation*> anim;
 	~AnfScene();
 };
 
