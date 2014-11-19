@@ -884,6 +884,7 @@ AnfScene::~AnfScene() {
 
 void AnfScene::createList(Graph::Node* n, string appearencerefID) {
 	if (n->displaylist) {
+		cout << "List with number: " << listNumber << endl;
 		n->list = listNumber;
 		glNewList(listNumber++, GL_COMPILE);
 		drawNode(n, appearencerefID, true);
