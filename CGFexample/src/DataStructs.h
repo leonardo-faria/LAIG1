@@ -1,9 +1,13 @@
+#ifndef FILE_H
+#define FILE_H
+
 #include <vector>
 #include <map>
 #include <iostream>
 #include <math.h>
 #include "FlagShadder.h"
 #include "CGFapplication.h"
+
 using namespace std;
 class Globals {
 public:
@@ -273,3 +277,5 @@ public:
 	}
 
 };
+
+#endif

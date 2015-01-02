@@ -1,0 +1,87 @@
+#include "Game.h"
+//TODO aparencias do tabuleiro
+Game::Game() {
+	Pawn n(2, 2, 3);
+	pawn.push_back(n);
+	for (int i = 0; i < 5; ++i) {
+		Pawn p1(i, 0, 1);
+		Pawn p2(i, 4, 2);
+		pawn.push_back(p1);
+		pawn.push_back(p2);
+	}
+	selectorPos[0] = 0;
+	selectorPos[1] = 0;
+	selected = false;
+	state = 0;
+}
+
+void Game::draw() {
+	if (state != 0)
+		glPushName(-1);
+	for (int i = 0; i < 5; ++i) {
+		glPushMatrix();
+		if (state != 0)
+			glLoadName(i);
+
+		for (int j = 0; j < 5; ++j) {
+			glPushMatrix();
+			glTranslatef(i, 0, j);
+			glRotatef(90, 1, 0, 0);
+			glTranslatef(0.1, 0.1, 0);
+			glScalef(0.8, 0.8, 0.8);
+			if (state != 0)
+				glPushName(j);
+
+			glBegin(GL_QUADS);
+			glTexCoord2d(0, 0);
+			glVertex3d(0, 0, 0);
+			glTexCoord2d(0, 1);
+			glVertex3d(0, 1, 0);
+			glTexCoord2d(1, 1);
+			glVertex3d(1, 1, 0);
+			glTexCoord2d(1, 0);
+			glVertex3d(1, 0, 0);
+
+			glEnd();
+
+			if (state != 0)
+				glPopName();
+			glPopMatrix();
+		}
+		glPopMatrix();
+	}
+	if (state != 0)
+		glPopName();
+	if (selected == true) {
+		glPushMatrix();
+		glTranslatef(selectorPos[0] + 0.5, 0.1, selectorPos[1] + 0.5);
+		glRotatef(-90, 1, 0, 0);
+		GLUquadric *botD = gluNewQuadric();
+		gluQuadricTexture(botD, GL_TRUE);
+		gluDisk(botD, 0, 0.5, 20, 1);
+		glPopMatrix();
+	}
+	if (state == 0)
+		glPushName(-1);
+	for (unsigned int i = 0; i < pawn.size(); ++i) {
+		glPushMatrix();
+		if (state == 0)
+			glLoadName(i);
+		pawn[i].draw();
+		glPopMatrix();
+	}
+	if (state == 0)
+		glPopName();
+}
+
+int Game::move_piece(int x, int y) {
+	history.push(*this);
+	pawn[select_pawn].pos[0] = x;
+	pawn[select_pawn].pos[1] = y;
+	return 0;
+}
+
+void Game::undo() {
+	*this = history.top();
+
+}

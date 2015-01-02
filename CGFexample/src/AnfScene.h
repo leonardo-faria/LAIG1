@@ -5,6 +5,7 @@
 #include "CGFappearance.h"
 #include "tinyxml.h"
 #include "tinystr.h"
+#include "Game.h"
 #include "DataStructs.h"
 class AnfScene: public CGFscene {
 public:
@@ -28,6 +29,8 @@ public:
 	vector<string> light_id;
 	int initial;
 	int listNumber;
+	Game* game;
+	CGFappearance* defapp;
 	~AnfScene();
 };
 

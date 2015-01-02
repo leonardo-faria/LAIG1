@@ -7,9 +7,8 @@
 #include <exception>
 
 #include "Interface.h"
-#include "CGFapplication.h"
+#include "PickInterface.h"
 
-#include "AnfScene.h"
 
 using std::cout;
 using std::exception;
@@ -25,7 +24,8 @@ int main(int argc, char* argv[]) {
 //			exit(1);
 //		}s
 		app.setScene(new AnfScene((char*) "LAIG_TP1_ANF_T01_G03_v2.anf"));
-		app.setInterface(new Interface());
+//		app.setInterface(new Interface());
+		app.setInterface(new PickInterface());
 
 		app.run();
 	} catch (GLexception& ex) {
