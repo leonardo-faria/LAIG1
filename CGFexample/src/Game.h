@@ -1,13 +1,14 @@
 #include <vector>
 #include <stack>
 #include "Pawn.h"
+#include "Play.h"
 
 using namespace std;
 
 class Game {
-	stack<Game> history;
 public:
 	vector<Pawn> pawn;
+	vector<Play> history;
 	int state;
 	int select_pawn;
 	Game();

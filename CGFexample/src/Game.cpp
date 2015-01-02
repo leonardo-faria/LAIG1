@@ -75,13 +75,29 @@ void Game::draw() {
 }
 
 int Game::move_piece(int x, int y) {
-	history.push(*this);
+	Play p(select_pawn, pawn[select_pawn].pos[0], pawn[select_pawn].pos[1], x,
+			y);
+	history.push_back(p);
 	pawn[select_pawn].pos[0] = x;
 	pawn[select_pawn].pos[1] = y;
 	return 0;
 }
 
 void Game::undo() {
-	*this = history.top();
-
+	pawn[history[history.size() - 1].pawn].pos[0] =
+			history[history.size() - 1].xi;
+	pawn[history[history.size() - 1].pawn].pos[1] =
+			history[history.size() - 1].yi;
+	history.pop_back();
+	if (state != 2) {
+		select_pawn = 0;
+		selectorPos[0] = pawn[0].pos[0];
+		selectorPos[1] = pawn[0].pos[1];
+		state = 2;
+		selected=true;
+	}
+	else {
+		selected=false;
+		state = 0;
+	}
 }

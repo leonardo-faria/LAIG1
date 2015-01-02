@@ -99,18 +99,19 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 					((AnfScene *) scene)->game->pawn[selected[0]].pos[0];
 			((AnfScene *) scene)->game->selectorPos[1] =
 					((AnfScene *) scene)->game->pawn[selected[0]].pos[1];
-			((AnfScene *) scene)->game->select_pawn=selected[0];
+			((AnfScene *) scene)->game->select_pawn = selected[0];
 			((AnfScene *) scene)->game->state = 1;
 			((AnfScene *) scene)->game->selected = true;
-		} else  if (((AnfScene *) scene)->game->state == 1){
-			((AnfScene *) scene)->game->move_piece(selected[0],selected[1]);
-			((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[0].pos[0];
-			((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[0].pos[1];
-			((AnfScene *) scene)->game->select_pawn=0;
+		} else if (((AnfScene *) scene)->game->state == 1) {
+			((AnfScene *) scene)->game->move_piece(selected[0], selected[1]);
+			((AnfScene *) scene)->game->selectorPos[0] =
+					((AnfScene *) scene)->game->pawn[0].pos[0];
+			((AnfScene *) scene)->game->selectorPos[1] =
+					((AnfScene *) scene)->game->pawn[0].pos[1];
+			((AnfScene *) scene)->game->select_pawn = 0;
 			((AnfScene *) scene)->game->state = 2;
-		}
-		else {
-			((AnfScene *) scene)->game->move_piece(selected[0],selected[1]);
+		} else {
+			((AnfScene *) scene)->game->move_piece(selected[0], selected[1]);
 			((AnfScene *) scene)->game->state = 0;
 			((AnfScene *) scene)->game->selected = false;
 
@@ -164,18 +165,25 @@ void PickInterface::initGUI() {
 			addRadioButtonToGroup(cameraList,
 					(char*) ((AnfScene*) scene)->camera_id[i].c_str());
 	}
-	addRadioButtonToGroup(cameraList, "Free Camera");
+	addRadioButtonToGroup(cameraList, (char*) "Free Camera");
 
 	addColumnToPanel(geral);
-	GLUI_Panel *shaderPanel = addPanelToPanel(geral, "Velocity", 1);
+	GLUI_Panel *shaderPanel = addPanelToPanel(geral, (char*) "Velocity", 1);
 	addSpinnerToPanel(shaderPanel, (char*) "velocity", 2,
 			&(((AnfScene*) scene)->velocity), 150);
+
+	addColumnToPanel(geral);
+	GLUI_Panel *undoPanel = addPanelToPanel(geral, (char*) "Game", 1);
+	addButtonToPanel(undoPanel, (char*) "undo", 32);
 
 }
 
 void PickInterface::processGUI(GLUI_Control *ctrl) {
 	if (ctrl->user_id >= 0)
-		if (ctrl->user_id != 150) {
+		if (ctrl->user_id == 32) {
+			if (!((AnfScene *) scene)->game->history.empty())
+				((AnfScene *) scene)->game->undo();
+		} else if (ctrl->user_id != 150) {
 			if (ctrl->get_int_val() == 1) {
 				((AnfScene *) scene)->lights[ctrl->user_id].enabled = true;
 				((AnfScene *) scene)->lights[ctrl->user_id].cgfl->enable();
