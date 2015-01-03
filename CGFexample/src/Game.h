@@ -7,14 +7,20 @@ using namespace std;
 
 class Game {
 public:
+	int t0,t;
+	int player;
 	vector<Pawn> pawn;
 	vector<Play> history;
 	int state;
 	int select_pawn;
+	bool rotating;
+	float ang,da;
 	Game();
 	void draw();
 	int selectorPos[2];
 	bool selected;
 	int move_piece(int x, int y);
 	void undo();
+	void update(unsigned long t);
+	void rotate();
 };

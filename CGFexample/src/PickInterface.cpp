@@ -43,8 +43,7 @@ void PickInterface::performPicking(int x, int y) {
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
 	// this is multiplied in the projection matrix
-	gluPickMatrix((GLdouble) x, (GLdouble) (CGFapplication::height - y), 5.0,
-			5.0, viewport);
+	gluPickMatrix((GLdouble) x, (GLdouble) (CGFapplication::height - y), 5.0, 5.0, viewport);
 
 	// multiply the projection matrix stored in our array to ensure same conditions as in normal render
 	glMultMatrixf(projmat);
@@ -95,19 +94,15 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 //		}
 
 		if (((AnfScene *) scene)->game->state == 0) {
-			((AnfScene *) scene)->game->selectorPos[0] =
-					((AnfScene *) scene)->game->pawn[selected[0]].pos[0];
-			((AnfScene *) scene)->game->selectorPos[1] =
-					((AnfScene *) scene)->game->pawn[selected[0]].pos[1];
+			((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[selected[0]].pos[0];
+			((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[selected[0]].pos[1];
 			((AnfScene *) scene)->game->select_pawn = selected[0];
 			((AnfScene *) scene)->game->state = 1;
 			((AnfScene *) scene)->game->selected = true;
 		} else if (((AnfScene *) scene)->game->state == 1) {
 			((AnfScene *) scene)->game->move_piece(selected[0], selected[1]);
-			((AnfScene *) scene)->game->selectorPos[0] =
-					((AnfScene *) scene)->game->pawn[0].pos[0];
-			((AnfScene *) scene)->game->selectorPos[1] =
-					((AnfScene *) scene)->game->pawn[0].pos[1];
+			((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[0].pos[0];
+			((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[0].pos[1];
 			((AnfScene *) scene)->game->select_pawn = 0;
 			((AnfScene *) scene)->game->state = 2;
 		} else {
@@ -115,6 +110,11 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 			((AnfScene *) scene)->game->state = 0;
 			((AnfScene *) scene)->game->selected = false;
 
+			if (((AnfScene *) scene)->game->player == 0)
+				((AnfScene *) scene)->game->player = 1;
+			else
+				((AnfScene *) scene)->game->player = 0;
+			((AnfScene *) scene)->game->rotate();
 		}
 		cout << "State " << ((AnfScene *) scene)->game->state << endl;
 
@@ -128,8 +128,7 @@ PickInterface::PickInterface() {
 void PickInterface::initGUI() {
 	GLUI_Panel *geral = addPanel("Interface", 1);
 	GLUI_Panel *mode = addPanelToPanel(geral, "Modo", 1);
-	GLUI_RadioGroup *modelist = addRadioGroupToPanel(mode,
-			&(((AnfScene *) scene)->globals.drawing.mode));
+	GLUI_RadioGroup *modelist = addRadioGroupToPanel(mode, &(((AnfScene *) scene)->globals.drawing.mode));
 
 	addRadioButtonToGroup(modelist, "Fill");
 	addRadioButtonToGroup(modelist, "Line");
@@ -140,37 +139,28 @@ void PickInterface::initGUI() {
 	GLUI_Panel *lightspanel = addPanelToPanel(geral, "Luzes", 1);
 	for (int i = 0; i < ((AnfScene*) scene)->light_id.size(); ++i) {
 		if (((AnfScene*) scene)->lights[i].enabled)
-			addCheckboxToPanel(lightspanel,
-					(char*) ((AnfScene*) scene)->light_id[i].c_str(), NULL, i)->set_int_val(
-					1);
+			addCheckboxToPanel(lightspanel, (char*) ((AnfScene*) scene)->light_id[i].c_str(), NULL, i)->set_int_val(1);
 		else
-			addCheckboxToPanel(lightspanel,
-					(char*) ((AnfScene*) scene)->light_id[i].c_str(), NULL, i)->set_int_val(
-					0);
+			addCheckboxToPanel(lightspanel, (char*) ((AnfScene*) scene)->light_id[i].c_str(), NULL, i)->set_int_val(0);
 	}
 
 	addColumnToPanel(geral);
 
 	GLUI_Panel *camerasPanel = addPanelToPanel(geral, "Camaras", 1);
 
-	GLUI_RadioGroup *cameraList = addRadioGroupToPanel(camerasPanel,
-			&(((AnfScene *) scene)->initial));
+	GLUI_RadioGroup *cameraList = addRadioGroupToPanel(camerasPanel, &(((AnfScene *) scene)->initial));
 
 	for (unsigned int i = 0; i < ((AnfScene*) scene)->camera_id.size(); ++i) {
 		if (i == ((AnfScene*) scene)->initial)
-			addRadioButtonToGroup(cameraList,
-					(char*) ((AnfScene*) scene)->camera_id[i].c_str())->set_int_val(
-					1);
+			addRadioButtonToGroup(cameraList, (char*) ((AnfScene*) scene)->camera_id[i].c_str())->set_int_val(1);
 		else
-			addRadioButtonToGroup(cameraList,
-					(char*) ((AnfScene*) scene)->camera_id[i].c_str());
+			addRadioButtonToGroup(cameraList, (char*) ((AnfScene*) scene)->camera_id[i].c_str());
 	}
 	addRadioButtonToGroup(cameraList, (char*) "Free Camera");
 
 	addColumnToPanel(geral);
 	GLUI_Panel *shaderPanel = addPanelToPanel(geral, (char*) "Velocity", 1);
-	addSpinnerToPanel(shaderPanel, (char*) "velocity", 2,
-			&(((AnfScene*) scene)->velocity), 150);
+	addSpinnerToPanel(shaderPanel, (char*) "velocity", 2, &(((AnfScene*) scene)->velocity), 150);
 
 	addColumnToPanel(geral);
 	GLUI_Panel *undoPanel = addPanelToPanel(geral, (char*) "Game", 1);

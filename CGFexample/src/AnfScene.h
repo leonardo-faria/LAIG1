@@ -29,6 +29,7 @@ public:
 	vector<string> light_id;
 	int initial;
 	int listNumber;
+	unsigned long t0, t;
 	Game* game;
 	CGFappearance* defapp;
 	~AnfScene();
