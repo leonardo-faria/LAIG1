@@ -20,7 +20,6 @@ Game::Game() {
 
 void Game::draw() {
 	glPushMatrix();
-	cout << ang << endl;
 	glRotatef(ang+da, 0, 1, 0);
 	glTranslatef(-2.5, 0, -2.5);
 //	cout << selectorPos[0] << selectorPos[1] << endl;

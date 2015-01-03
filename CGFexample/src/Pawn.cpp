@@ -4,9 +4,20 @@ Pawn::Pawn(int x, int y, int owner) {
 	pos[1] = y;
 	this->owner = owner;
 	app = new CGFappearance();
-	f[0] = 0.5;
-	f[1] = 0.5;
-	f[2] = 0.5;
+	if (owner == 1) {
+		f[0] = 0.8;
+		f[1] = 0.2;
+		f[2] = 0.2;
+	} else if (owner == 2) {
+		f[0] = 0.2;
+		f[1] = 0.2;
+		f[2] = 0.8;
+	} else {
+
+		f[0] = 0.2;
+		f[1] = 0.8;
+		f[2] = 0.2;
+	}
 	f[3] = 1;
 	app->setAmbient(f);
 	app->setDiffuse(f);
@@ -20,7 +31,6 @@ void Pawn::draw() {
 	app->apply();
 	glTranslatef(pos[0] + 0.5, 0.25, pos[1] + 0.5);
 	GLUquadric *sphere = gluNewQuadric();
-
 	gluQuadricTexture(sphere, GL_TRUE);
 	gluSphere(sphere, 0.25, 10, 10);
 	glPopMatrix();
