@@ -100,7 +100,7 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 			((AnfScene *) scene)->game->state = 1;
 			((AnfScene *) scene)->game->selected = true;
 		} else if (((AnfScene *) scene)->game->state == 1) {
-			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1])==0) {
+			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1]) == 0) {
 				((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[0].pos[0];
 				((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[0].pos[1];
 				((AnfScene *) scene)->game->select_pawn = 0;
@@ -114,14 +114,12 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 			}
 
 		} else {
-			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1])==0) {
+			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1]) == 0) {
 				((AnfScene *) scene)->game->state = 0;
 				((AnfScene *) scene)->game->selected = false;
-				if(((AnfScene *) scene)->game->end())
-					cout << "end" << endl;
+				((AnfScene *) scene)->game->end();
 			}
 		}
-//		cout << "State " << ((AnfScene *) scene)->game->state << endl;
 
 	} else
 		printf("Nothing selected while picking \n");

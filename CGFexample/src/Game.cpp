@@ -16,6 +16,7 @@ Game::Game() {
 	player = 1;
 	da = 0;
 	ang = 0;
+	over = 0;
 }
 
 void Game::draw() {
@@ -23,11 +24,17 @@ void Game::draw() {
 	glRotatef(ang + da, 0, 1, 0);
 	glTranslatef(-2.5, 0, -2.5);
 //	cout << selectorPos[0] << selectorPos[1] << endl;
-	if (state != 0)
+//	cout << "over " << over << endl;
+//	if(over)
+//	{
+//		return;
+//	}
+//	end();
+	if (state != 0 && !over)
 		glPushName(-1);
 	for (int i = 0; i < 5; ++i) {
 		glPushMatrix();
-		if (state != 0)
+		if (state != 0 && !over)
 			glLoadName(i);
 
 		for (int j = 0; j < 5; ++j) {
@@ -36,7 +43,7 @@ void Game::draw() {
 			glRotatef(90, 1, 0, 0);
 			glTranslatef(0.1, 0.1, 0);
 			glScalef(0.8, 0.8, 0.8);
-			if (state != 0)
+			if (state != 0 && !over)
 				glPushName(j);
 
 			glBegin(GL_QUADS);
@@ -51,13 +58,13 @@ void Game::draw() {
 
 			glEnd();
 
-			if (state != 0)
+			if (state != 0 && !over)
 				glPopName();
 			glPopMatrix();
 		}
 		glPopMatrix();
 	}
-	if (state != 0)
+	if (state != 0 && !over)
 		glPopName();
 	if (selected == true) {
 		glPushMatrix();
@@ -68,7 +75,7 @@ void Game::draw() {
 		gluDisk(botD, 0, 0.5, 20, 1);
 		glPopMatrix();
 	}
-	if (state == 0) {
+	if (state == 0 && !over) {
 		glPushName(-1);
 		for (unsigned int i = player; i < pawn.size(); ++i += 1) {
 			glPushMatrix();
@@ -195,10 +202,10 @@ string Game::to_string() {
 }
 
 int Game::end() {
-	cout << "Pos " << pawn[0].pos[1] << endl;
-	if (pawn[0].pos[1] == 0)
-		return 1;
-	if (pawn[0].pos[1] == 4)
-		return 2;
+	cout << history[history.size()-1].xf << endl;
+	if (history[history.size()-1].yf == 0)
+		over = 1;
+	if (history[history.size()-1].yf == 4)
+		over = 2;
 	return 0;
 }

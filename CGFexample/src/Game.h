@@ -8,7 +8,7 @@ using namespace std;
 
 class Game {
 public:
-	int t0,t;
+	int t0,t,over;
 	int player;
 	vector<Pawn> pawn;
 	vector<Play> history;
