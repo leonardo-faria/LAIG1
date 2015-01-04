@@ -2,6 +2,7 @@
 #include <stack>
 #include "Pawn.h"
 #include "Play.h"
+#include "plog.h"
 
 using namespace std;
 
@@ -23,4 +24,7 @@ public:
 	void undo();
 	void update(unsigned long t);
 	void rotate();
+	string to_string();
+	int test_move(int x,int y);
+	int end();
 };

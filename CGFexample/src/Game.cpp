@@ -13,14 +13,14 @@ Game::Game() {
 	selectorPos[1] = 0;
 	selected = false;
 	state = 0;
-	player = 0;
+	player = 1;
 	da = 0;
 	ang = 0;
 }
 
 void Game::draw() {
 	glPushMatrix();
-	glRotatef(ang+da, 0, 1, 0);
+	glRotatef(ang + da, 0, 1, 0);
 	glTranslatef(-2.5, 0, -2.5);
 //	cout << selectorPos[0] << selectorPos[1] << endl;
 	if (state != 0)
@@ -68,21 +68,36 @@ void Game::draw() {
 		gluDisk(botD, 0, 0.5, 20, 1);
 		glPopMatrix();
 	}
-	if (state == 0)
+	if (state == 0) {
 		glPushName(-1);
-	for (unsigned int i = 0; i < pawn.size(); ++i) {
-		glPushMatrix();
-		if (state == 0)
+		for (unsigned int i = player; i < pawn.size(); ++i += 1) {
+			glPushMatrix();
 			glLoadName(i);
-		pawn[i].draw();
-		glPopMatrix();
-	}
-	if (state == 0)
+			pawn[i].draw();
+			glPopMatrix();
+
+		}
 		glPopName();
+		pawn[0].draw();
+		for (unsigned int i = player - 1; i < pawn.size(); ++i += 1) {
+			glPushMatrix();
+			pawn[i].draw();
+			glPopMatrix();
+
+		}
+	} else {
+		for (unsigned int i = 0; i < pawn.size(); ++i) {
+			glPushMatrix();
+			pawn[i].draw();
+			glPopMatrix();
+
+		}
+	}
 	glPopMatrix();
 }
-
 int Game::move_piece(int x, int y) {
+	if (test_move(x, y) == 0)
+		return 1;
 	Play p(select_pawn, pawn[select_pawn].pos[0], pawn[select_pawn].pos[1], x, y);
 	history.push_back(p);
 	pawn[select_pawn].move(x, y);
@@ -93,6 +108,13 @@ void Game::undo() {
 	pawn[history[history.size() - 1].pawn].pos[0] = history[history.size() - 1].xi;
 	pawn[history[history.size() - 1].pawn].pos[1] = history[history.size() - 1].yi;
 	history.pop_back();
+	if (state == 2) {
+		rotate();
+		if (player == 1)
+			player = 2;
+		else
+			player = 1;
+	}
 	if (state != 2) {
 		select_pawn = 0;
 		selectorPos[0] = pawn[0].pos[0];
@@ -114,7 +136,7 @@ void Game::update(unsigned long t) {
 	for (unsigned int i = 0; i < pawn.size(); i++)
 		pawn[i].update(t);
 	if (rotating) {
-		for (int i = 0; i < pawn.size(); i++)
+		for (unsigned int i = 0; i < pawn.size(); i++)
 			if (pawn[i].moving)
 				return;
 		if (t0 == 0)
@@ -128,4 +150,55 @@ void Game::update(unsigned long t) {
 			da = 0;
 		}
 	}
+}
+
+int Game::test_move(int x, int y) {
+	string str;
+	str = "valida_jogada(" + to_string() + ",";
+	str.push_back(pawn[select_pawn].pos[1] + '0');
+	str.push_back(',');
+	str.push_back(pawn[select_pawn].pos[0] + '0');
+	str.push_back(',');
+	str.push_back(y + '0');
+	str.push_back(',');
+	str.push_back(x + '0');
+	str.push_back(',');
+	str.push_back(pawn[select_pawn].owner + '0');
+	str += ").\n";
+	send((char*) str.c_str(), str.size());
+	char res[256];
+	int n = recieve(res);
+	if (res[0] == '0')
+		return 0;
+	else
+		return 1;
+}
+
+string Game::to_string() {
+	string str = "[";
+	for (int i = 0; i < 5; ++i) {
+		str.push_back('[');
+		for (int j = 0; j < 5; ++j) {
+			str.push_back('0');
+			if (j != 4)
+				str.push_back(',');
+		}
+		str += "]";
+		if (i != 4)
+			str += ",";
+	}
+	str += "]";
+	for (unsigned int i = 0; i < pawn.size(); ++i) {
+		str[2 + pawn[i].pos[0] * 2 + pawn[i].pos[1] * 12] = pawn[i].owner + '0';
+	}
+	return str;
+}
+
+int Game::end() {
+	cout << "Pos " << pawn[0].pos[1] << endl;
+	if (pawn[0].pos[1] == 0)
+		return 1;
+	if (pawn[0].pos[1] == 4)
+		return 2;
+	return 0;
 }

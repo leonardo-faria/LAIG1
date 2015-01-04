@@ -1,6 +1,5 @@
 #include "DataStructs.h"
 class Pawn: public CGFobject {
-	int owner;
 	float f[4];
 	CGFappearance* app;
 	unsigned long t0;
@@ -8,6 +7,7 @@ class Pawn: public CGFobject {
 	float vx,vy;
 	float dest[2];
 public:
+	int owner;
 	bool moving;
 	void move(float x,float y);
 	void update(unsigned long t);

@@ -100,23 +100,28 @@ void PickInterface::processHits(GLint hits, GLuint buffer[]) {
 			((AnfScene *) scene)->game->state = 1;
 			((AnfScene *) scene)->game->selected = true;
 		} else if (((AnfScene *) scene)->game->state == 1) {
-			((AnfScene *) scene)->game->move_piece(selected[0], selected[1]);
-			((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[0].pos[0];
-			((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[0].pos[1];
-			((AnfScene *) scene)->game->select_pawn = 0;
-			((AnfScene *) scene)->game->state = 2;
-		} else {
-			((AnfScene *) scene)->game->move_piece(selected[0], selected[1]);
-			((AnfScene *) scene)->game->state = 0;
-			((AnfScene *) scene)->game->selected = false;
+			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1])==0) {
+				((AnfScene *) scene)->game->selectorPos[0] = ((AnfScene *) scene)->game->pawn[0].pos[0];
+				((AnfScene *) scene)->game->selectorPos[1] = ((AnfScene *) scene)->game->pawn[0].pos[1];
+				((AnfScene *) scene)->game->select_pawn = 0;
+				((AnfScene *) scene)->game->state = 2;
+				((AnfScene *) scene)->game->rotate();
 
-			if (((AnfScene *) scene)->game->player == 0)
-				((AnfScene *) scene)->game->player = 1;
-			else
-				((AnfScene *) scene)->game->player = 0;
-			((AnfScene *) scene)->game->rotate();
+				if (((AnfScene *) scene)->game->player == 1)
+					((AnfScene *) scene)->game->player = 2;
+				else
+					((AnfScene *) scene)->game->player = 1;
+			}
+
+		} else {
+			if (((AnfScene *) scene)->game->move_piece(selected[0], selected[1])==0) {
+				((AnfScene *) scene)->game->state = 0;
+				((AnfScene *) scene)->game->selected = false;
+				if(((AnfScene *) scene)->game->end())
+					cout << "end" << endl;
+			}
 		}
-		cout << "State " << ((AnfScene *) scene)->game->state << endl;
+//		cout << "State " << ((AnfScene *) scene)->game->state << endl;
 
 	} else
 		printf("Nothing selected while picking \n");

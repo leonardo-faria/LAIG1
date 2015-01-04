@@ -15,6 +15,7 @@ AnfScene::AnfScene(char* filename) {
 	t = 0;
 	t0 = 0;
 	game = new Game();
+	cout << game->to_string() << endl;
 	defapp = new CGFappearance();
 	float f[4];
 	f[0] = 0;
@@ -635,6 +636,7 @@ AnfScene::AnfScene(char* filename) {
 }
 
 void AnfScene::init() {
+	socketConnect();
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//	Declares and enables a light
@@ -1153,7 +1155,12 @@ void AnfScene::display() {
 
 	// Example 1: simple naming
 	defapp->apply();
+	glPushMatrix();
+	glRotatef(225,0,1,0);
+	glRotatef(20,-1,0,0);
+	glScalef(2.0,2.0,2.0);
 	game->draw();
+	glPopMatrix();
 	// ---- END feature demos
 
 	// glutSwapBuffers() will swap pointers so that the back buffer becomes the front buffer and vice-versa
