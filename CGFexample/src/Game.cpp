@@ -17,6 +17,7 @@ Game::Game() {
 	da = 0;
 	ang = 0;
 	over = 0;
+
 }
 
 void Game::draw() {
@@ -25,10 +26,46 @@ void Game::draw() {
 	glTranslatef(-2.5, 0, -2.5);
 //	cout << selectorPos[0] << selectorPos[1] << endl;
 //	cout << "over " << over << endl;
-//	if(over)
-//	{
-//		return;
-//	}
+	if (over) {
+		glPushMatrix();
+		glTranslatef(0, 3, 2.5);
+		glScalef(0.005, 0.005, 0.005);
+		glColor3f(0.0, 0.0, 1.0);		// azul
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'P');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'L');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'A');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'Y');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'E');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'R');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, ' ');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, '0' + over);
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, ' ');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'W');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'I');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'N');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'S');
+		glPopMatrix();
+		glPushMatrix();
+		glTranslatef(5, 2, 2.5);
+		glScalef(0.005, 0.005, 0.005);
+		glRotatef(180, 0, 1, 0);
+		glColor3f(0.0, 0.0, 1.0);		// azul
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'P');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'L');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'A');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'Y');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'E');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'R');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, ' ');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, '0' + over);
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, ' ');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'W');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'I');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'N');
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'S');
+		glPopMatrix();
+
+	}
 //	end();
 	if (state != 0 && !over)
 		glPushName(-1);
@@ -202,10 +239,10 @@ string Game::to_string() {
 }
 
 int Game::end() {
-	cout << history[history.size()-1].xf << endl;
-	if (history[history.size()-1].yf == 0)
+	cout << history[history.size() - 1].xf << endl;
+	if (history[history.size() - 1].yf == 0)
 		over = 1;
-	if (history[history.size()-1].yf == 4)
+	if (history[history.size() - 1].yf == 4)
 		over = 2;
 	return 0;
 }

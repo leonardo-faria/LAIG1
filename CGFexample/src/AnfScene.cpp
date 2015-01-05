@@ -1122,12 +1122,16 @@ void AnfScene::display() {
 	// Clear image and depth buffer everytime we update the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Initialize Model-View matrix as identity (no transformation
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	if (initial < (int) camera_id.size())
+		cameras[camera_id[initial]]->apply();
+	else
+		CGFscene::activeCamera->applyView();
+	CGFapplication::activeApp->forceRefresh();
+	// Initialize Model-View matrix as identity (no transformation
 
 	// Apply transformations corresponding to the camera position relative to the origin
-	CGFscene::activeCamera->applyView();
 
 //	light0->draw();
 	// Draw (and update) light
@@ -1153,12 +1157,11 @@ void AnfScene::display() {
 	// picking example, the important parts are the gl*Name functions
 	// and the code in the associted PickInterface class
 
-	// Example 1: simple naming
+	drawNode(&graph.nodes[graph.rootid], "", false);	// Example 1: simple naming
 	defapp->apply();
 	glPushMatrix();
-	glRotatef(225,0,1,0);
-	glRotatef(20,-1,0,0);
-	glScalef(2.0,2.0,2.0);
+	glRotatef(225, 0, 1, 0);
+	glScalef(3.0, 3.0, 3.0);
 	game->draw();
 	glPopMatrix();
 	// ---- END feature demos

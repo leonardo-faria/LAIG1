@@ -1,12 +1,12 @@
 #include "DataStructs.h"
 class Pawn: public CGFobject {
 	float f[4];
-	CGFappearance* app;
 	unsigned long t0;
 	float ori[2];
 	float vx,vy;
 	float dest[2];
 public:
+	CGFappearance* app;
 	int owner;
 	bool moving;
 	void move(float x,float y);
