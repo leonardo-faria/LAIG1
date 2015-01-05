@@ -677,7 +677,7 @@ void AnfScene::init() {
 		glShadeModel(GL_SMOOTH);
 	else if (globals.drawing.shadding == "flat")
 		glShadeModel(GL_FLAT);
-	glClearColor(globals.drawing.background[0], globals.drawing.background[1], globals.drawing.background[2], globals.drawing.background[3]);
+	glClearColor(0.5,0.5,0.5,1);
 	glNormal3f(0, 0, 1);
 
 	setUpdatePeriod(5);

@@ -163,6 +163,7 @@ int Game::move_piece(int x, int y) {
 }
 
 void Game::undo() {
+	over=0;
 	pawn[history[history.size() - 1].pawn].pos[0] = history[history.size() - 1].xi;
 	pawn[history[history.size() - 1].pawn].pos[1] = history[history.size() - 1].yi;
 	history.pop_back();
