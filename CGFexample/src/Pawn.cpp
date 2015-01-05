@@ -5,18 +5,20 @@ Pawn::Pawn(int x, int y, int owner) {
 	this->owner = owner;
 	app = new CGFappearance();
 	if (owner == 1) {
-		f[0] = 0.8;
-		f[1] = 0.2;
-		f[2] = 0.2;
+		f[0] = 1;
+		f[1] = 1;
+		f[2] = 1;
+		app->setTexture("escuro.jpg");
 	} else if (owner == 2) {
-		f[0] = 0.2;
-		f[1] = 0.2;
-		f[2] = 0.8;
+		f[0] = 1;
+		f[1] = 1;
+		f[2] = 1;
+		app->setTexture("metal.jpg");
 	} else {
 
-		f[0] = 0.2;
-		f[1] = 0.8;
-		f[2] = 0.2;
+		f[0] = 0.02;
+		f[1] = 0.02;
+		f[2] = 0.02;
 	}
 	f[3] = 1;
 	app->setAmbient(f);

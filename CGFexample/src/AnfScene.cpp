@@ -16,16 +16,19 @@ AnfScene::AnfScene(char* filename) {
 	t0 = 0;
 	game = new Game();
 	cout << game->to_string() << endl;
+//	Textures::Texture deft;
+//	deft.file="PoleText.jpg";
 	defapp = new CGFappearance();
 	float f[4];
-	f[0] = 0;
-	f[1] = 1;
-	f[2] = 0;
-	f[3] = 0.1;
+	f[0] = 0.5;
+	f[1] = 0.5;
+	f[2] = 0.5;
+	f[3] = 1;
 	defapp->setAmbient(f);
 	defapp->setSpecular(f);
 	defapp->setDiffuse(f);
 	defapp->setShininess(2);
+	defapp->setTexture("poleText.jpg");
 	velocity = 2;
 	listNumber = 1;
 	TiXmlElement* globalsElement;
@@ -1156,14 +1159,12 @@ void AnfScene::display() {
 
 	// picking example, the important parts are the gl*Name functions
 	// and the code in the associted PickInterface class
-
-	drawNode(&graph.nodes[graph.rootid], "", false);	// Example 1: simple naming
+	// Example 1: simple naming
 	defapp->apply();
-	glPushMatrix();
-	glRotatef(225, 0, 1, 0);
-	glScalef(3.0, 3.0, 3.0);
 	game->draw();
+	drawNode(&graph.nodes[graph.rootid], "", false);
 	glPopMatrix();
+
 	// ---- END feature demos
 
 	// glutSwapBuffers() will swap pointers so that the back buffer becomes the front buffer and vice-versa

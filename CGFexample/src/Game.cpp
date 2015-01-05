@@ -17,12 +17,25 @@ Game::Game() {
 	da = 0;
 	ang = 0;
 	over = 0;
+	float f[4];
+	f[0] = 1;
+	f[1] = 1;
+	f[2] = 1;
+	f[3] = 1;
+	app = new CGFappearance();
+	app->setAmbient(f);
+	app->setDiffuse(f);
+	app->setSpecular(f);
+	app->setTexture("target.jpeg");
 
 }
 
 void Game::draw() {
 	glPushMatrix();
 	glRotatef(ang + da, 0, 1, 0);
+	glPushMatrix();
+	glRotatef(225, 0, 1, 0);
+	glScalef(3.0, 3.0, 3.0);
 	glTranslatef(-2.5, 0, -2.5);
 //	cout << selectorPos[0] << selectorPos[1] << endl;
 //	cout << "over " << over << endl;
@@ -30,7 +43,7 @@ void Game::draw() {
 		glPushMatrix();
 		glTranslatef(0, 3, 2.5);
 		glScalef(0.005, 0.005, 0.005);
-		glColor3f(0.0, 0.0, 1.0);		// azul
+		glColor3f(0.5, 0.5, 1.0);		// azul
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'P');
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'L');
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'A');
@@ -49,7 +62,7 @@ void Game::draw() {
 		glTranslatef(5, 2, 2.5);
 		glScalef(0.005, 0.005, 0.005);
 		glRotatef(180, 0, 1, 0);
-		glColor3f(0.0, 0.0, 1.0);		// azul
+		glColor3f(0.5, 0.5, 1.0);		// azul
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'P');
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'L');
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'A');
@@ -107,6 +120,7 @@ void Game::draw() {
 		glPushMatrix();
 		glTranslatef(selectorPos[0] + 0.5, 0.1, selectorPos[1] + 0.5);
 		glRotatef(-90, 1, 0, 0);
+		app->apply();
 		GLUquadric *botD = gluNewQuadric();
 		gluQuadricTexture(botD, GL_TRUE);
 		gluDisk(botD, 0, 0.5, 20, 1);

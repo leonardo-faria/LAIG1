@@ -8,6 +8,7 @@ using namespace std;
 
 class Game {
 public:
+	CGFappearance* app;
 	int t0,t,over;
 	int player;
 	vector<Pawn> pawn;
