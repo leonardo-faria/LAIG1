@@ -205,7 +205,7 @@ void Game::update(unsigned long t) {
 			da = 180 * dt / 1000.0;
 		else {
 			rotating = false;
-			ang = ang + da;
+			ang = ang + 180;
 			da = 0;
 		}
 	}
